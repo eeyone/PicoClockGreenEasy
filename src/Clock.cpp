@@ -51,10 +51,11 @@ void Clock::onNtpTimeReceived(time_t utcTime, uint32_t ms)
     m_rtcSync = SyncingToRtc;
 }
 
-void Clock::tick(bool &clockAdjusted, AlarmId &reachedAlarm, Settings &settings)
+void Clock::tick(
+    bool &clockAdjusted, Settings::AlarmMode &reachedAlarmMode, Settings &settings)
 {
     clockAdjusted = false;
-    reachedAlarm = NoAlarm;
+    reachedAlarmMode = Settings::AlarmMode::Off;
 
     m_tickCount.increment();
 
@@ -102,17 +103,37 @@ void Clock::tick(bool &clockAdjusted, AlarmId &reachedAlarm, Settings &settings)
 
     if (m_tickCount == 0 && m_tm.tm_sec == 0)
     {
+        const struct Settings::Alarm *reachedAlarm = nullptr;
         if (alarmReached(Alarm1))
-            reachedAlarm = Alarm1;
-        else if (alarmReached(Alarm2))
-            reachedAlarm = Alarm2;
-
-        if (reachedAlarm != NoAlarm && settings.get().skipNextAlarm)
         {
-            // This alarm must be skipped. Disable the "skip next alarm" function and do not report 
-            // that an alarm was reached
-            settings.modify().skipNextAlarm = false;
-            reachedAlarm = NoAlarm;
+            reachedAlarm = &settings.get().alarm1;
+            reachedAlarmMode = settings.get().alarm1.mode;
+        } else if (alarmReached(Alarm2))
+        {
+            reachedAlarm = &settings.get().alarm2;
+            reachedAlarmMode = settings.get().alarm2.mode;
+        }
+
+        if (reachedAlarm != nullptr)
+        {
+            // Disable the alarm if it has to ring only once.
+            if (reachedAlarm->ringsOnce())
+            {
+                struct Settings::Alarm &alarm = 
+                    reachedAlarm == 
+                        &settings.get().alarm1 ? settings.modify().alarm1 : settings.modify().alarm2;
+
+                // TODO: Update "Alarm On" indicator as well
+                alarm.mode = Settings::AlarmMode::Off;
+            }
+
+            if (settings.get().skipNextAlarm)
+            {
+                // This alarm must be skipped. Disable the "skip next alarm" function and report 
+                // that no alarm was reached.
+                settings.modify().skipNextAlarm = false;
+                reachedAlarmMode = Settings::AlarmMode::Off;
+            }
         }
     }
 
@@ -158,6 +179,8 @@ void Clock::setAlarm(AlarmId id, const Settings::Alarm &al)
 
 bool Clock::nextAlarm(int &weekday, int &hour, int &min, const Settings::Values &settings) const
 {
+    // TODO: Also consider alarms set to "once" correctly
+
     // Figure out what is the next alarm after now
     Time time;
     if (!nextAlarmAfter(m_tm.tm_wday, {m_tm.tm_hour, m_tm.tm_min}, weekday, time))
@@ -219,7 +242,7 @@ bool Clock::nextAlarmAfter(
 Clock::Time Clock::alarmTimeAtDay(AlarmId alarmId, int weekday) const
 {
     if (m_alarm[alarmId].mode != Settings::AlarmMode::Off &&
-        m_alarm[alarmId].enabledOnWeekDay(weekday))
+        (m_alarm[alarmId].ringsOnce() || m_alarm[alarmId].enabledOnWeekDay(weekday)))
         return {m_alarm[alarmId].hour, m_alarm[alarmId].min};
     else
         return Time();
@@ -231,7 +254,7 @@ bool Clock::alarmReached(AlarmId id) const
     return 
         m_tm.tm_min == al.min && 
         m_tm.tm_hour == al.hour && 
-        al.enabledOnWeekDay(m_tm.tm_wday) && 
+        (al.ringsOnce() || al.enabledOnWeekDay(m_tm.tm_wday)) && 
         al.mode != Settings::AlarmMode::Off;
 }
 

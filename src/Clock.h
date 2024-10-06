@@ -28,7 +28,7 @@ public:
         m_rtcSync = SyncingToRtc;
     }
     
-    void tick(bool &clockAdjusted, AlarmId &reachedAlarm, Settings &settings);
+    void tick(bool &clockAdjusted, Settings::AlarmMode &reachedAlarmMode, Settings &settings);
     void setAlarm(AlarmId id, const Settings::Alarm &al);
     bool nextAlarm(int &weekday, int &hour, int &min, const Settings::Values &settings) const;
 

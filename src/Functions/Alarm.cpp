@@ -75,10 +75,9 @@ void Alarm::renderFrame(
             putAmPmIndicators(frame, morning);
             break;
         case EditingAlarmWeekDays:
-            // Stick to the right to avoid the disturbing scrolling while the user is editing days.
-            bringScrollingToRight();
-            
-            renderScrollingText(frame, fullRefresh, prefix + hourS + ":" + minS);
+            std::string frequency = 
+                alarm.ringsOnce() ? uiText(TextId::Once) : uiText(TextId::Weekly);
+            renderScrollingText(frame, fullRefresh, prefix + frequency);
             putAmPmIndicators(frame, morning);
             break;
     }
@@ -177,10 +176,6 @@ void Alarm::modifyValue(int valueIndex, Direction direction)
 void Alarm::finishEditing()
 {
     auto &alarm = modifyAlarmSettings();
-
-    // If no week days were selected, disable the alarm to avoid confusion.
-    if (alarm.weekDayBits == 0)
-        alarm.mode = Settings::AlarmMode::Off;
 
     // Set the alarm in the clock so that it can ring.
     if (m_alarmId == Alarm1)

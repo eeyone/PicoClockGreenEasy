@@ -26,6 +26,8 @@ namespace
             "Loud",
             "Gradual",
             "Skip next alarm: ",
+            "Once",
+            "Weekly",
 
             "Auto light: ",
             "Time format: ",

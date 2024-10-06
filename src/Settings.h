@@ -26,7 +26,15 @@ public:
         AlarmMode mode = AlarmMode::Off;
         int hour = 6;
         int min = 0;
-        uint8_t weekDayBits = 0x3E; // Monday to Friday
+        
+        // Set to Monday to Friday by default. A value of 0 make the alarm ring only once when 
+        // hour:min is reached.
+        uint8_t weekDayBits = 0x3E;
+
+        bool ringsOnce() const // Does the alarm ring only once?
+        {
+            return weekDayBits == 0;
+        }
 
         bool enabledOnWeekDay(int weekDay) const
         {

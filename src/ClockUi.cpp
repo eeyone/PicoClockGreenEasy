@@ -120,8 +120,8 @@ void ClockUi::onFrameCallback()
 {
     // Make the clock and some functions tick
     bool clockAdjusted = false;
-    Clock::AlarmId reachedAlarm = Clock::NoAlarm;
-    m_clock.tick(clockAdjusted, reachedAlarm, m_settings);
+    Settings::AlarmMode reachedAlarmMode = Settings::AlarmMode::Off;
+    m_clock.tick(clockAdjusted, reachedAlarmMode, m_settings);
     m_countdownFunc->tick();
     m_stopwatchFunc->tick();
 
@@ -130,11 +130,9 @@ void ClockUi::onFrameCallback()
         m_forceRefresh = true;
     
     // Start ringing if an alarm was reached.
-    if (reachedAlarm != Clock::NoAlarm)
+    if (reachedAlarmMode != Settings::AlarmMode::Off)
     {
-        m_alarmRinging = 
-            reachedAlarm == Clock::Alarm1 ? 
-            m_settings.get().alarm1.mode : m_settings.get().alarm2.mode;
+        m_alarmRinging = reachedAlarmMode;
         m_ringingForSecs = 0;
     }
 

@@ -29,6 +29,8 @@ enum class TextId
     Loud,
     Gradual,
     SkipNextAlarmColon,
+    Once,
+    Weekly,
 
     // For options
     AutoLightColon,
