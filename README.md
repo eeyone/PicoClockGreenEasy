@@ -122,8 +122,8 @@ This is the full definition of the menu structure. Use the "enter/set" button to
     - reset: reset stopwatch to zero
     - exit: leave submenu
 - wifi status (no actual function)
-- options &rarr; set auto scroll &rarr; set time format &rarr; set hourly chime &rarr; set auto light -> set brightness (if auto light is off)
-  options &rarr; set auto scroll &rarr; set time format &rarr; set hourly chime &rarr; set auto light -> set brightness dark -> set brightness dim -> set brightness bright (if auto light is on)
+- (if auto light is off) options &rarr; set auto scroll &rarr; set time format &rarr; set hourly chime &rarr; set auto light -> set brightness
+- (if auto light is on) options &rarr; set auto scroll &rarr; set time format &rarr; set hourly chime &rarr; set auto light -> set brightness dark -> set brightness dim -> set brightness bright
 
 
 ## Using NTP synchronization
