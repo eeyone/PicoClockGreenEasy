@@ -22,7 +22,6 @@ private:
     int valueCount() const override;
     void startEditingValue(int valueIndex) override;
     void modifyValue(int valueIndex, Direction direction) override;
-    void finishEditing() override;
 
     const Settings::Alarm &alarmSettings() const;
     Settings::Alarm &modifyAlarmSettings();

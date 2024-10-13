@@ -13,7 +13,8 @@ void AlarmSubmenu::onSelect()
     std::string text = uiText(TextId::Alarms);
  
     int hour = -1, min = -1;
-    if (clock().nextAlarm(m_nextAlarmWeekday, hour, min, settings()))
+    m_nextAlarmWeekday = -1;
+    if (clock().nextAlarm(m_nextAlarmWeekday, hour, min))
     {
         int displayedHour;
         convertHour(hour, displayedHour, m_nextAlarmOnMorning);
@@ -42,6 +43,14 @@ void AlarmSubmenu::renderFrame(
     if (clock().isAlarmOn())
     {
         putAmPmIndicators(frame, m_nextAlarmOnMorning);
-        frame.putWeekDay(m_nextAlarmWeekday, true);
+        
+        if (m_nextAlarmWeekday != -1)
+            frame.putWeekDay(m_nextAlarmWeekday, true);
+        else
+        {
+            // Even if an alarm is on, there can be no upcoming alarm, if the only enabled alarm 
+            // will ring once and "skip next alarm" is enabled.
+            frame.putWeekDays(0);
+        }
     }
 }

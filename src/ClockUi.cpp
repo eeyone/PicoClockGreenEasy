@@ -32,7 +32,7 @@ namespace
 }
 
 // Make m_clock tick at the display frame rate, so that calculations are simpler.
-ClockUi::ClockUi() : m_clock(Display::FRAME_RATE)
+ClockUi::ClockUi() : m_clock(Display::FRAME_RATE, m_settings)
 {
     TRACE << "Constructor";
 
@@ -48,8 +48,6 @@ ClockUi::ClockUi() : m_clock(Display::FRAME_RATE)
     // Consider settings that were just read from the flash memory
     m_curFuncIdx = m_settings.get().function;
     initHorizScrolling(); // If the selected function needs to scroll
-    m_clock.setAlarm(Clock::Alarm1, m_settings.get().alarm1);
-    m_clock.setAlarm(Clock::Alarm2, m_settings.get().alarm2);
 
     TRACE << "Add root level functions";
     addFunction<Time>(Time::HourMinSec);
@@ -121,7 +119,7 @@ void ClockUi::onFrameCallback()
     // Make the clock and some functions tick
     bool clockAdjusted = false;
     Settings::AlarmMode reachedAlarmMode = Settings::AlarmMode::Off;
-    m_clock.tick(clockAdjusted, reachedAlarmMode, m_settings);
+    m_clock.tick(clockAdjusted, reachedAlarmMode);
     m_countdownFunc->tick();
     m_stopwatchFunc->tick();
 

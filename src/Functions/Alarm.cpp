@@ -172,14 +172,3 @@ void Alarm::modifyValue(int valueIndex, Direction direction)
         break;
     }
 }
-
-void Alarm::finishEditing()
-{
-    auto &alarm = modifyAlarmSettings();
-
-    // Set the alarm in the clock so that it can ring.
-    if (m_alarmId == Alarm1)
-        clock().setAlarm(Clock::Alarm1, alarm);
-    else
-        clock().setAlarm(Clock::Alarm2, alarm);
-}

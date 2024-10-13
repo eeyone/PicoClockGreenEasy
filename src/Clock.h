@@ -20,7 +20,9 @@ public:
         AlarmCount
     };
 
-    Clock(int tickPerSec);
+    // Beware that the object keeps a reference on settings, so it must exists at least as long as
+    // the object.
+    Clock(int tickPerSec, Settings &settings);
 
     void startSyncFromNtp();
     void startSyncToRtc()
@@ -28,15 +30,14 @@ public:
         m_rtcSync = SyncingToRtc;
     }
     
-    void tick(bool &clockAdjusted, Settings::AlarmMode &reachedAlarmMode, Settings &settings);
-    void setAlarm(AlarmId id, const Settings::Alarm &al);
-    bool nextAlarm(int &weekday, int &hour, int &min, const Settings::Values &settings) const;
+    void tick(bool &clockAdjusted, Settings::AlarmMode &reachedAlarmMode);
+    bool nextAlarm(int &weekday, int &hour, int &min) const;
 
     bool isAlarmOn() const
     {
         return 
-            m_alarm[Alarm1].mode != Settings::AlarmMode::Off || 
-            m_alarm[Alarm2].mode != Settings::AlarmMode::Off;
+            alarm(Alarm1).mode != Settings::AlarmMode::Off || 
+            alarm(Alarm2).mode != Settings::AlarmMode::Off;
     }
     int tickCount() const
     {
@@ -77,9 +78,19 @@ private:
 
     void onNtpTimeReceived(time_t utcTime, uint32_t ms);
     bool alarmReached(AlarmId id) const;
+    const Settings::Alarm &alarm(AlarmId id) const;
     bool nextAlarmAfter(
-        int startWeekday, const Time &startTime, int &weekday, Clock::Time &time) const;
-    Time alarmTimeAtDay(AlarmId alarmId, int weekday) const;
+        int startWeekday, 
+        const Time &startTime, 
+        int &weekday, 
+        Clock::Time &time, 
+        unsigned int &enabledAlarmsMask) const;
+    bool earliestAlarm(
+        const Time &alarm1Time,
+        const Time &alarm2Time,
+        Time &earliestTime,
+        unsigned int &enabledAlarmsMask) const;
+    Time alarmTimeAtDay(AlarmId alarmId, int weekday, unsigned int enabledAlarmsMask) const;
     void setTmFromTime();
     void setFromNonDstConsideringTm(tm tm); 
 
@@ -91,11 +102,11 @@ private:
     };
 
     CyclicCounter m_tickCount;
+    Settings &m_settings;
     std::unique_ptr<Rtc> m_rtc; // As unique_ptr so that it can be easily disabled
     std::unique_ptr<Ntp> m_ntp;
     RtcSync m_rtcSync = SyncingFromRtc;
     int m_lastRtcSec;
-    Settings::Alarm m_alarm[AlarmCount];
 
     DaylightSavingTime m_dst;
     
