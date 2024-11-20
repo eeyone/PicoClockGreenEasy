@@ -28,6 +28,7 @@ This project is an easy-to-use firmware for the Waveshare Pico-Clock-Green writt
     - brightness boost: if auto light is enabled and the ambient light is below 10%, the brightness is temporarily increased by 20% during 5 seconds after a user input, so that the display is more readable when setting something during the night
 - alarms:
     - next alarm: displays next time and weekday when an alarm will ring, so that the user can quickly check if the alarm was set correctly before sleeping
+    - weekly/once: If one or more weekdays are selected, the alarm will ring every week on these days. If no weekday is selected, the alarm will ring when the defined time is reached and disable itself.
     - skip next alarm: e.g. if you woke up before the alarm time or the next day is a national holiday, activate this function and the next alarm (and only this one) will be skipped. This is shown by the slow blinking of the "Alarm On" indicator.
     - gradual alarm mode that progressively increases the duration of beeps to wake up the user gently
 
