@@ -5,6 +5,8 @@
 #include "PicoClockHw/Platform.h"
 #include "PicoClockHw/Wifi.h"
 
+#include <hardware/uart.h>
+
 int main() 
 {
     Platform::initStdIo();
@@ -19,6 +21,19 @@ int main()
 #endif
     TRACE << "Clock UI";
     ClockUi ui;
+
+    gpio_set_function(0, GPIO_FUNC_UART);
+    gpio_set_function(1, GPIO_FUNC_UART);
+    auto baud = uart_init(uart0, 9600);
+    TRACE << "Baud: " << baud;
+
+    while (1)
+    {
+        bool r = uart_is_readable(uart0);
+        //std::cout << "Readable: " <<r  << std::endl;
+        if (r)
+            std::cout << "Received: " << uart_getc(uart0) << std::endl;
+    }
 
     if (Wifi::init())
         if (Wifi::connectBlocking())
