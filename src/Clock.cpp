@@ -4,13 +4,16 @@
 Clock::Clock(int tickPerSec, Settings &settings) : 
     m_tickCount(tickPerSec), 
     m_settings(settings),
-    m_rtc(std::make_unique<Rtc>()), 
+#if USE_RTC
+    m_rtc(std::make_unique<Rtc>()),
+    // TODO: Find why 2 days of the weeks are on when starting with USE_RTC==0
+#endif
     m_ntp(std::make_unique<Ntp>())
 {
     // Initialize m_time and m_tm from the RTC. It will be used for displaying time 
     // while waiting for the sync from the RTC to be finished.
     tm rtcTime;
-    if (m_rtc->read(rtcTime))
+    if (m_rtc != nullptr && m_rtc->read(rtcTime))
     {
         setFromNonDstConsideringTm(rtcTime);
         m_rtcSync = SyncingFromRtc;
@@ -23,6 +26,10 @@ Clock::Clock(int tickPerSec, Settings &settings) :
         m_rtc.release();
         m_rtcSync = SyncDone;
     }
+
+    using namespace std::placeholders;
+    m_gps.setTimeCallback(std::bind(&Clock::onExternalTimeReceived, this, _1, _2));
+    m_gps.setEnabled(true);
 }
 
 void Clock::startSyncFromNtp()
@@ -38,13 +45,13 @@ void Clock::startSyncFromNtp()
     }
 
     using namespace std::placeholders;
-    m_ntp->setTimeCallback(std::bind(&Clock::onNtpTimeReceived, this, _1, _2));
+    m_ntp->setTimeCallback(std::bind(&Clock::onExternalTimeReceived, this, _1, _2));
     m_ntp->startRequest();
 }
 
-void Clock::onNtpTimeReceived(time_t utcTime, uint32_t ms)
+void Clock::onExternalTimeReceived(time_t utcTime, uint32_t ms)
 {
-    TRACE << "Received ntp time:" << utcTime <<", setting it";
+    TRACE << "Received external UTC time:" << utcTime <<", setting it";
     m_time = utcTime + UTC_OFFSET * 60 * 60;
     setTmFromTime();
     m_tickCount = ms * m_tickCount.wrapValue() / 1000;
@@ -52,6 +59,9 @@ void Clock::onNtpTimeReceived(time_t utcTime, uint32_t ms)
 
     // Now that we got the time from NTP, plan RTC sync at the next second change.
     m_rtcSync = SyncingToRtc;
+
+    // Disable GPS as the clock is now synchronized
+    m_gps.setEnabled(false);
 }
 
 void Clock::tick(bool &clockAdjusted, Settings::AlarmMode &reachedAlarmMode)
