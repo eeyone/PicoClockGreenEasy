@@ -97,7 +97,7 @@ void AbstractFunction::adjustField(
             break;
         case AutoBrightnessPoint:
             floor = -100;
-            modulo = 201;
+            modulo = 301;
             bigStepSize = 10;
             break;
     }
