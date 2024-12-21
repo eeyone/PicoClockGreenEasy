@@ -44,17 +44,18 @@ void Date::renderFrame(Bitmap &frame, int editedValueIndex, int blinkingCounter,
         } 
         else
         {
-            if (editedValueIndex != EditingDay || blinkingCounter<BLINKING_DISAPPEAR_FRAME)
+            if (editedValueIndex != EditingMonth || blinkingCounter<BLINKING_DISAPPEAR_FRAME)
             {
-                frame.draw2DigitsIntWithLeadingZero(0, 0, clock().get().tm_mday);
+                frame.draw2DigitsIntWithLeadingZero(0, 0, clock().get().tm_mon + 1);
             }
 
             frame.drawRectangle(10, 3, 11, 3, true);
 
-            if (editedValueIndex != EditingMonth || blinkingCounter<BLINKING_DISAPPEAR_FRAME)
+            if (editedValueIndex != EditingDay || blinkingCounter<BLINKING_DISAPPEAR_FRAME)
             {
-                frame.draw2DigitsIntWithLeadingZero(13, 0, clock().get().tm_mon + 1);
+                frame.draw2DigitsIntWithLeadingZero(13, 0, clock().get().tm_mday);
             }
+
         }
 
         putWeekDay(frame);
