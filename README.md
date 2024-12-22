@@ -14,11 +14,13 @@ This project is an easy-to-use firmware for the Waveshare Pico-Clock-Green writt
     - stopwatch
     - hourly chime
     - auto light, to automatically adjust the brightness of the leds depending on the ambient light
+- automatic time synchronization:
+    - NTP synchronization over Wi-Fi (requires a development environment to set the SSID and password)
+    - GPS synchronization (requires an additional GPS module)
 - additional:
     - menu based user interface with horizontal and vertical scrolling
     - instant start up: no splash screen or animation, just power the device and you have a clock
     - 3 time display styles: hour:min:sec, hour:min + bar (the bar is a kind of horizontal hourglass to show seconds), hour:min
-    - NTP synchronization over Wi-Fi (requires a development environment to set the SSID and password)
     - automatic daylight saving time observation (currently only for European Union)
     - persistent saving of clock settings to flash memory
     - optional hourly chime activation using the ambient light sensor
@@ -134,6 +136,19 @@ If you have a Pico W, you can use NTP to synchronize date/time at start-up. For 
 This configuration is done by setting the WIFI_SSID and WIFI_PASSWORD macros in the UserConfig.cmake file (between the escaped quotes). Additionally, the UTC offset also needs to be set in UTC_OFFSET, as the NTP server provides UTC time and does not know where you are located. After configuring, follow the steps of the "Building from the source code" section above. 
 
 When running the firmware, move to the "wifi status" function to check if your settings are working.
+
+
+## Using GPS synchronization
+
+If you don't have a Pico W, or want to benefit from a synchronized clock without having to setup a Wi-Fi connection, you can connect an additional GPS module that will provide date and time information to the firmware. No software configuration change is necessary.
+
+I tested this feature using a NEO-6M GPS module. It should work with other modules that have an UART interface that uses the NMEA protocol. Here is the pin wiring to use:
+|GPS module|Pico    |
+|----------|--------|
+|VCC       |3V3(OUT)|
+|RX        |GP0     |
+|TX        |GP1     |
+|GND       |GND     |
 
 
 ## Configuring daylight saving time
