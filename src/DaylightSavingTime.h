@@ -8,7 +8,8 @@ public:
     enum Location
     {
         Unknown,
-        Europe
+        Europe,
+        Usa
     };
 
     time_t considerDst(time_t time);
@@ -16,6 +17,7 @@ public:
 
 private:
     bool isDstActive(time_t time);
+    void determineDstStartAndEnd(const tm &givenTm);
 
     time_t m_yearStart = 0;
     time_t m_dstStart = 0;

@@ -35,7 +35,7 @@ time_t DaylightSavingTime::unconsiderDst(time_t time)
 
 bool DaylightSavingTime::isDstActive(time_t time)
 {
-    if (DST_LOCATION != Europe)
+    if (DST_LOCATION == Unknown)
         return false;
 
     // Determine DST start and end for the year if not done yet, or if the year has changed since we
@@ -54,8 +54,20 @@ bool DaylightSavingTime::isDstActive(time_t time)
         yearStartTm.tm_mon = 0;
         m_yearStart = mktime(&yearStartTm);
 
+        determineDstStartAndEnd(givenTm);
+    }
+
+    return time >= m_dstStart && time < m_dstEnd;
+}
+
+void DaylightSavingTime::determineDstStartAndEnd(const tm &givenTm)
+{
+    // Reference: https://en.wikipedia.org/wiki/Daylight_saving_time_by_country
+    tm dstStartTm = givenTm;
+    tm dstEndTm = givenTm;
+    if (DST_LOCATION == Europe)
+    {
         // In Europe, DST starts on last Sunday in March at 01:00 UTC
-        tm dstStartTm = givenTm;
         dstStartTm.tm_sec = 0;
         dstStartTm.tm_min = UTC_OFFSET * 60 % 60;
         dstStartTm.tm_hour = 1 + UTC_OFFSET;
@@ -63,11 +75,8 @@ bool DaylightSavingTime::isDstActive(time_t time)
         dstStartTm.tm_mday = 31; // Last day of March
         mktime(&dstStartTm); // So that dstStartTm.tm_wday is calculated
         dstStartTm.tm_mday -= dstStartTm.tm_wday; // last Sunday in March
-        m_dstStart = mktime(&dstStartTm);
-        TRACE << "This year, DST starts on" << dstStartTm;
 
         // In Europe, DST ends on last Sunday in October at 01:00 UTC
-        tm dstEndTm = givenTm;
         dstEndTm.tm_sec = 0;
         dstEndTm.tm_min = UTC_OFFSET * 60 % 60;
         dstEndTm.tm_hour = 1 + UTC_OFFSET;
@@ -75,10 +84,35 @@ bool DaylightSavingTime::isDstActive(time_t time)
         dstEndTm.tm_mday = 31; // Last day of October
         mktime(&dstEndTm); // So that dstEndTm.tm_wday is calculated
         dstEndTm.tm_mday -= dstEndTm.tm_wday; // last Sunday in October
-        m_dstEnd = mktime(&dstEndTm);
-        TRACE << "This year, DST ends on" << dstEndTm;
+    } else // USA
+    {
+        // In USA, DST starts on second Sunday in March at 02:00 
+        dstStartTm.tm_sec = 0;
+        dstStartTm.tm_min = 0;
+        dstStartTm.tm_hour = 2;
+        dstStartTm.tm_mon = 2; // March as "months since January"
+        dstStartTm.tm_mday = 1;
+        mktime(&dstStartTm); // So that dstStartTm.tm_wday is calculated
+        if (dstStartTm.tm_wday == 0)
+            dstStartTm.tm_mday = 8; // The month starts with a Sunday, this is the second one
+        else
+            dstStartTm.tm_mday = 15 - dstStartTm.tm_wday; // second Sunday
+
+        // In USA, DST ends on first Sunday in November at 02:00
+        dstEndTm.tm_sec = 0;
+        dstEndTm.tm_min = 0;
+        dstEndTm.tm_hour = 1; // 02:00 with DST applied
+        dstEndTm.tm_mon = 10; // November as "months since January"
+        dstEndTm.tm_mday = 1;
+        mktime(&dstEndTm); // So that dstEndTm.tm_wday is calculated
+        if (dstEndTm.tm_wday == 0)
+            dstEndTm.tm_mday = 1; // The month starts with a Sunday
+        else
+            dstEndTm.tm_mday = 8 - dstEndTm.tm_wday; // first Sunday    
     }
 
-    bool dstActive = time >= m_dstStart && time < m_dstEnd;
-    return dstActive;
+    m_dstStart = mktime(&dstStartTm);
+    TRACE << "This year, DST starts on" << dstStartTm;
+    m_dstEnd = mktime(&dstEndTm);
+    TRACE << "This year, DST ends on" << dstEndTm;
 }
