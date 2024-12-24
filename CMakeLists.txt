@@ -40,6 +40,7 @@ add_executable( ${PROJECT_NAME}
                 src/PicoClockHw/Buzzer.cpp
                 src/PicoClockHw/Display.cpp
                 src/PicoClockHw/Flash.cpp
+                src/PicoClockHw/Gps.cpp
                 src/PicoClockHw/Platform.cpp
                 src/PicoClockHw/Rtc.cpp
 )

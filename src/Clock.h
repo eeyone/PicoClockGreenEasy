@@ -1,6 +1,7 @@
 #pragma once
 
 #include "DaylightSavingTime.h"
+#include "PicoClockHw/Gps.h"
 #include "PicoClockHw/Rtc.h"
 #include "PicoClockHw/Ntp.h"
 #include "Settings.h"
@@ -76,7 +77,7 @@ private:
         bool isValid() const;
     };
 
-    void onNtpTimeReceived(time_t utcTime, uint32_t ms);
+    void onExternalTimeReceived(time_t utcTime, uint32_t ms);
     bool alarmReached(AlarmId id) const;
     const Settings::Alarm &alarm(AlarmId id) const;
     bool nextAlarmAfter(
@@ -105,6 +106,7 @@ private:
     Settings &m_settings;
     std::unique_ptr<Rtc> m_rtc; // As unique_ptr so that it can be easily disabled
     std::unique_ptr<Ntp> m_ntp;
+    Gps m_gps;
     RtcSync m_rtcSync = SyncingFromRtc;
     int m_lastRtcSec;
 

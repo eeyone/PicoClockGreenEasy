@@ -3,7 +3,7 @@ set(PICO_BOARD pico_w)
 
 # Enable/disable debug traces to stdio. Traces can be filtered by file in the 
 # isEnabledForFile method of src/Utils/Trace.cpp
-set(TRACE_TO_STDIO "0")
+set(TRACE_TO_STDIO "1")
 
 add_compile_definitions(
     WIFI_SSID=\"\"

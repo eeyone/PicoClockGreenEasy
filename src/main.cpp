@@ -10,7 +10,7 @@ int main()
     Platform::initStdIo();
 
     // Can be enabled to delay startup in order to debug
-#if 0    
+#if 0
     for (int i = 5; i > 0;i--)
     {
         sleep_ms(1000);
