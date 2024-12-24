@@ -24,7 +24,7 @@ This project is an easy-to-use firmware for the Waveshare Pico-Clock-Green writt
     - optional hourly chime activation using the ambient light sensor
     - configurable brightness: 
       - if auto light is disabled, the brightness can be set as a percentage
-      - if auto light is enabled, the brightness can be defined at three ambient light points between which the firmware will interpolate: dark (no ambient light), dim (10% ambient light), bright (maximum ambient light)
+      - if auto light is enabled, the brightness can be defined at three ambient light points between which the firmware will interpolate: dark (no ambient light), dim (10% ambient light), max (maximum ambient light)
     - brightness boost: if auto light is enabled and the ambient light is below 10%, the brightness is temporarily increased by 20% during 5 seconds after a user input, so that the display is more readable when setting something during the night
 - alarms:
     - next alarm: displays next time and weekday when an alarm will ring, so that the user can quickly check if the alarm was set correctly before sleeping
@@ -123,8 +123,8 @@ This is the full definition of the menu structure. Use the "enter/set" button to
     - reset: reset stopwatch to zero
     - exit: leave submenu
 - wifi status (no actual function)
-- (if auto light is off) options &rarr; set auto scroll &rarr; set time format &rarr; set hourly chime &rarr; set auto light -> set brightness
-- (if auto light is on) options &rarr; set auto scroll &rarr; set time format &rarr; set hourly chime &rarr; set auto light -> set brightness dark -> set brightness dim -> set brightness bright
+- (if auto light is off) options &rarr; set auto scroll &rarr; set time format &rarr; set date format &rarr; set hourly chime &rarr; set auto light -> set brightness
+- (if auto light is on) options &rarr; set auto scroll &rarr; set time format &rarr; set date format &rarr; set hourly chime &rarr; set auto light -> set dark brightness -> set dim brightness -> set max brightness
 
 
 ## Using NTP synchronization
@@ -162,9 +162,9 @@ With auto light, the brightness is automatically adjusted depending on the ambie
 - press "set" several times to reach the "auto light" setting
 - press "up" or "down" to set "auto light" to "on"
 - press "set" (for brightness settings, the "brightness boost" is temporarily disabled)
-- go to a completely dark room and use the "up" or "down" buttons to set the "brightness dark" percentage (to make the display very dark for sleeping, this value can also be negative, but the display will never be completely turned off, as a brightness of 0% or less results in a effective brightness of 0.1%)
+- go to a completely dark room and use the "up" or "down" buttons to set the "dark brightness" percentage (to make the display very dark for sleeping, this value can also be negative, but the display will never be completely turned off, as a brightness of 0% or less results in a effective brightness of 0.1%)
 - press "set"
-- go to a not-so-dark room (or turn on the light) and use the "up" or "down" buttons to set the "brightness dim" percentage
+- go to a not-so-dark room (or turn on the light) and use the "up" or "down" buttons to set the "dim brightness" percentage
 - press "set"
-- if you need to adjust the brightness in a daylight conditions, you can use the "up" or "down" buttons to set the "brightness bright" percentage
+- if you need to adjust the brightness in a daylight conditions, you can use the "up" or "down" buttons to set the "max brightness" percentage
 - press "set"

@@ -33,12 +33,13 @@ namespace
             "Time format: ",
             "24h",
             "12h",
+            "Date format: ",
             "Hourly chime: ",
             "Auto scroll: ",
             "Brightness: ",
             "Dark brightness: ",
             "Dim brightness: ",
-            "Bright Brightness: ",
+            "Max brightness: ",
             "On",
             "Off",
             "Day",
@@ -47,6 +48,12 @@ namespace
             "Reset",
             "Countdown",
             "Set",
+
+            "MM-DD",
+            "MM/DD",
+            "DD-MM",
+            "DD/MM",
+            "DD.MM",
     };
 }
 

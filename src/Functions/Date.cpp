@@ -44,16 +44,39 @@ void Date::renderFrame(Bitmap &frame, int editedValueIndex, int blinkingCounter,
         } 
         else
         {
-            if (editedValueIndex != EditingMonth || blinkingCounter<BLINKING_DISAPPEAR_FRAME)
+            int monthPos = 0, dayPos = 13;
+            auto dateFormat = settings().dateFormat;
+
+            if (dateFormat != Settings::DateFormat::MonthDashDay && 
+                dateFormat != Settings::DateFormat::MonthSlashDay)
             {
-                frame.draw2DigitsIntWithLeadingZero(0, 0, clock().get().tm_mon + 1);
+                std::swap(monthPos, dayPos);
             }
 
-            frame.drawRectangle(10, 3, 11, 3, true);
+            if (editedValueIndex != EditingMonth || blinkingCounter<BLINKING_DISAPPEAR_FRAME)
+            {
+                frame.draw2DigitsIntWithLeadingZero(monthPos, 0, clock().get().tm_mon + 1);
+            }
+
+            switch(dateFormat)
+            {
+                case Settings::DateFormat::MonthDashDay:
+                case Settings::DateFormat::DayDashMonth:
+                    frame.drawRectangle(10, 3, 11, 3, true);
+                    break;
+                case Settings::DateFormat::MonthSlashDay:
+                case Settings::DateFormat::DaySlashMonth:
+                    frame.drawRectangle(10, 4, 10, 6, true);
+                    frame.drawRectangle(11, 0, 11, 3, true);
+                    break;
+                case Settings::DateFormat::DayDotMonth:
+                    frame.putPixel(11, 6, true);
+                    break;
+            }
 
             if (editedValueIndex != EditingDay || blinkingCounter<BLINKING_DISAPPEAR_FRAME)
             {
-                frame.draw2DigitsIntWithLeadingZero(13, 0, clock().get().tm_mday);
+                frame.draw2DigitsIntWithLeadingZero(dayPos, 0, clock().get().tm_mday);
             }
 
         }

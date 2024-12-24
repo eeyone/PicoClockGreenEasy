@@ -24,13 +24,24 @@ void Options::renderFrame(Bitmap &frame, int editedValueIndex, int blinkingCount
                 uiText(TextId::AutoScrollColon), 
                 settings().autoScroll ? uiText(TextId::On) : uiText(TextId::Off));
             break;
-        case EditingFormat:
+        case EditingTimeFormat:
             renderScrollingText(
                 frame, 
                 fullRefresh, 
-                uiText(TextId::FormatColon), 
+                uiText(TextId::TimeFormatColon), 
                 settings().format24h ? uiText(TextId::Format24h) : uiText(TextId::Format12h));
             break;
+        case EditingDateFormat:
+        {
+            int formatTextId = 
+                static_cast<int>(TextId::MonthDashDay) + static_cast<int>(settings().dateFormat);
+            renderScrollingText(
+                frame, 
+                fullRefresh, 
+                uiText(TextId::DateFormatColon), 
+                uiText(static_cast<TextId>(formatTextId)));
+            break;
+        }
         case EditingHourlyChime:
             TextId modeTextId;
             switch(settings().hourlyChime)
@@ -105,8 +116,12 @@ void Options::modifyValue(int valueIndex, Direction direction)
             toggleBool(modifySettings().autoScroll);
             break;
 
-        case EditingFormat:
+        case EditingTimeFormat:
             toggleBool(modifySettings().format24h);
+            break;
+
+        case EditingDateFormat:
+            adjustEnum(modifySettings().dateFormat, direction);
             break;
 
         case EditingHourlyChime:

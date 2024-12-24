@@ -34,9 +34,10 @@ enum class TextId
 
     // For options
     AutoLightColon,
-    FormatColon,
+    TimeFormatColon,
     Format24h,
     Format12h,
+    DateFormatColon,
     HourlyChimeColon,
     AutoScrollColon,
     BrightnessColon,
@@ -52,6 +53,13 @@ enum class TextId
     Reset,
     Countdown,
     Set,
+
+    // Date formats. Must match the order of Settings::DateFormat.
+    MonthDashDay,
+    MonthSlashDay,
+    DayDashMonth,
+    DaySlashMonth,
+    DayDotMonth,
 
     TextCount
 };

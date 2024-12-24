@@ -21,6 +21,16 @@ public:
         Count
     };
 
+    enum class DateFormat
+    {
+        MonthDashDay,
+        MonthSlashDay,
+        DayDashMonth,
+        DaySlashMonth,
+        DayDotMonth,
+        Count
+    };
+
     struct Alarm
     {
         AlarmMode mode = AlarmMode::Off;
@@ -59,6 +69,7 @@ public:
         int brightnessDark = -20;
         int brightnessDim = 55;
         int brightnessBright = 100;
+        DateFormat dateFormat = DateFormat::MonthDashDay;
     };
 
     Settings();
