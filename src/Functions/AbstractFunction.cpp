@@ -192,6 +192,13 @@ void AbstractFunction::select()
     m_clockUi->m_forceRefresh = true;
 }
 
+void AbstractFunction::selectLastUsedTimeFunction()
+{
+    m_clockUi->m_currentMenu = &m_clockUi->m_rootMenu;
+    m_clockUi->m_curFuncIdx = m_clockUi->m_lastUsedTimeFunction;
+    m_clockUi->m_forceRefresh = true;
+}
+
 Buzzer &AbstractFunction::buzzer()
 {
     return m_clockUi->m_buzzer;

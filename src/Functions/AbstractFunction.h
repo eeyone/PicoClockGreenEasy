@@ -105,6 +105,7 @@ protected:
         std::vector<std::unique_ptr<AbstractFunction>> *menu, 
         AbstractFunction *function = nullptr);
     void select(); // Select the function if it is in the current menu
+    void selectLastUsedTimeFunction();
     Buzzer &buzzer();
 
 private:

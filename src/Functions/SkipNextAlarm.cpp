@@ -16,5 +16,7 @@ void SkipNextAlarm::renderFrame(Bitmap &frame, int editedValueIndex, int blinkin
 void SkipNextAlarm::activate()
 {
     modifySettings().skipNextAlarm = !settings().skipNextAlarm;
-    bringScrollingToRight();
+    
+    // Go back to the time function, as it is next thing the user would do anyway.
+    selectLastUsedTimeFunction();
 }
