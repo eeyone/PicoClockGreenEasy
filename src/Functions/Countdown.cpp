@@ -142,14 +142,5 @@ void Countdown::modifyValue(int valueIndex, Direction direction)
             break;
     }
 
-    // Prevent from setting the start to 00:00
-    if (settings().countdownStartMin == 0 && settings().countdownStartSec == 0)
-    {
-        if (valueIndex == EditingMin || direction == Up || direction == RepeatedUp)
-            modifySettings().countdownStartSec = 1;
-        else 
-            modifySettings().countdownStartSec = 59;
-    }
-
     initCount();
 }
