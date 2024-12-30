@@ -1,6 +1,7 @@
 #include "Gps.h"
 
 #include "Utils/Trace.h"
+#include "Utils/Trampoline.h"
 
 #include <hardware/uart.h>
 #include <hardware/gpio.h>
@@ -10,6 +11,7 @@
 namespace
 {
     const auto GPS_UART = uart0;
+    const int TIMEOUT_MS = 2000;
 }
 
 Gps *Gps::m_instance = nullptr;
@@ -42,11 +44,37 @@ void Gps::setEnabled(bool enabled)
 
         // Enable the UART to send interrupts on reception
         uart_set_irq_enables(GPS_UART, true/*has data*/, false/*needs data*/);
+
+        // Set up timer to detect reception timeout
+        resetTimeoutAlarm();
     } else
     {
         uart_set_irq_enables(GPS_UART, false/*has data*/, false/*needs data*/);
         irq_set_enabled(UART_IRQ, false);
+
+        // Stop timer
+        if (m_timeoutAlarm != -1)
+        {
+            cancel_alarm(m_timeoutAlarm);
+            m_timeoutAlarm = -1;
+        }
     }
+}
+
+void Gps::resetTimeoutAlarm()
+{
+    if (m_timeoutAlarm != -1)
+        cancel_alarm(m_timeoutAlarm);
+
+    MAKE_TRAMPOLINE(Gps, onTimeout, userPtrAtEnd);
+    m_timeoutAlarm = add_alarm_in_ms(TIMEOUT_MS, onTimeout, this, true);
+}
+
+int64_t Gps::onTimeout(alarm_id_t)
+{
+    m_timeoutAlarm = -1;
+    m_timeoutCallback();
+    return 0; // Do not reschedule
 }
 
 void Gps::onUartRx()
@@ -72,6 +100,9 @@ void Gps::onUartRx()
 
 void Gps::onMessage(const std::string &msg)
 {
+    // Postpone timeout timer
+    resetTimeoutAlarm();
+
     // Decode RMC message 
     // (see https://content.u-blox.com/sites/default/files/products/documents/u-blox6_ReceiverDescrProtSpec_%28GPS.G6-SW-10018%29_Public.pdf)
 
@@ -122,5 +153,4 @@ void Gps::onDateTime(const std::string &date, const std::string &time)
 
     if (m_timeCallback)
         m_timeCallback(mktime(&dt), 0); // TODO: support fractional part of the seconds
-
 }

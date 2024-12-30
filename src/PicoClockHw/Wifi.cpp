@@ -25,6 +25,15 @@ bool Wifi::init()
     TRACE << "Initialized successfully";
 
     cyw43_arch_enable_sta_mode();
+
+    // On Pico non-W, cyw43_arch_init still succeeds and turns the onboard led on (as the cyw43 uses
+    // pin 25 on Pico W). Therefore, turn the led off again. This does not have any effect on 
+    // Pico W.
+    TRACE << "Turn led off";
+    gpio_init(PICO_DEFAULT_LED_PIN);
+    gpio_set_dir(PICO_DEFAULT_LED_PIN, GPIO_OUT);
+    gpio_put(PICO_DEFAULT_LED_PIN, false);
+
     return true;
 }
 
@@ -39,21 +48,25 @@ bool Wifi::connectBlocking()
     int res =  
         cyw43_arch_wifi_connect_timeout_ms(WIFI_SSID, WIFI_PASSWORD, CYW43_AUTH_WPA2_AES_PSK, 10000);
     TRACE << "Result: " << res;
+    return handleConnectResult(res);
+}
 
+bool Wifi::connectAsync()
+{
+    TRACE << "cyw43_arch_wifi_connect_async";
+    int res = cyw43_arch_wifi_connect_async(WIFI_SSID, WIFI_PASSWORD, CYW43_AUTH_WPA2_AES_PSK);
+    TRACE << "Result: " << res;
+    return handleConnectResult(res);
+}
+
+bool Wifi::handleConnectResult(int res)
+{
     switch(res)
     {
         case PICO_OK:
             m_connectResult = OK;
             return true;
         case PICO_ERROR_NOT_PERMITTED:
-            // On Pico non-W, cyw43_arch_init succeeds, turns the onboard led on (as the cyw43 uses
-            // pin 25 on Pico W) and cyw43_arch_wifi_connect_timeout_ms fails with this 
-            // error. Therefore, turn the led off again.
-            TRACE << "Turn led off";
-            gpio_init(PICO_DEFAULT_LED_PIN);
-            gpio_set_dir(PICO_DEFAULT_LED_PIN, GPIO_OUT);
-            gpio_put(PICO_DEFAULT_LED_PIN, false);
-
             m_connectResult = NotAvailable;
             return false;
         default:
@@ -69,9 +82,10 @@ Wifi::Status Wifi::linkStatus()
     if (m_connectResult != OK && m_connectResult != Unknown)
         return m_connectResult;
 
+//    TRACE << "cyw43_tcpip_link_status";
     int res = cyw43_tcpip_link_status(&cyw43_state, CYW43_ITF_STA);
 
-    TRACE << "res:" << res;
+//    TRACE << "res:" << res;
     switch(res)
     {
         case CYW43_LINK_DOWN:

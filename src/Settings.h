@@ -31,6 +31,14 @@ public:
         Count
     };
 
+    enum class SyncSource
+    {
+        Rtc,
+        Ntp,
+        Gps,
+        Count
+    };
+
     struct Alarm
     {
         AlarmMode mode = AlarmMode::Off;
@@ -70,6 +78,7 @@ public:
         int brightnessDim = 55;
         int brightnessBright = 100;
         DateFormat dateFormat = DateFormat::MonthDashDay;
+        SyncSource syncSource = SyncSource::Rtc;
     };
 
     Settings();

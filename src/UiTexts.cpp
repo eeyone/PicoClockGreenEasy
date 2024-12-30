@@ -54,6 +54,14 @@ namespace
             "DD-MM",
             "DD/MM",
             "DD.MM",
+
+            "Clock sync",
+            "Sync now",
+            "Source: ",
+
+            "RTC",
+            "NTP",
+            "GPS",
     };
 }
 

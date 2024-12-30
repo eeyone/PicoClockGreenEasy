@@ -1,5 +1,6 @@
 #include "Clock.h"
 #include "Utils/Trace.h"
+#include "PicoClockHw/Wifi.h"
 
 Clock::Clock(int tickPerSec, Settings &settings) : 
     m_tickCount(tickPerSec), 
@@ -27,40 +28,104 @@ Clock::Clock(int tickPerSec, Settings &settings) :
         m_rtcSync = SyncDone;
     }
 
+    // Initialize GPS synchronization. NTP will be initialized later, as it requires the Wi-Fi to be
+    // initialized.
     using namespace std::placeholders;
     m_gps.setTimeCallback(std::bind(&Clock::onExternalTimeReceived, this, _1, _2));
-    m_gps.setEnabled(true);
+    m_gps.setTimeoutCallback([this]()
+                             { 
+            m_gps.setEnabled(false);
+            m_extSync = Inactive; });
+
+    // Start GPS reception if it is the selected sync source
+    if (m_settings.get().syncSource == Settings::SyncSource::Gps)
+        startGpsSync();
 }
 
-void Clock::startSyncFromNtp()
+void Clock::onWifiInited()
 {
-    if (!m_ntp)
-        return;
-
-    if (!m_ntp->init())
-    {
-        // Will not use NTP.
-        m_ntp.release();
-        return;
-    }
-
     using namespace std::placeholders;
-    m_ntp->setTimeCallback(std::bind(&Clock::onExternalTimeReceived, this, _1, _2));
-    m_ntp->startRequest();
+    if (m_ntp->init())
+    {
+        m_ntp->setTimeCallback(std::bind(&Clock::onExternalTimeReceived, this, _1, _2));
+        m_ntp->setFailCallback([this](Ntp::State reason)
+                               { m_extSync = Inactive; });
+        
+        // Start NTP sync if it is the selected source
+        if (m_settings.get().syncSource == Settings::SyncSource::Ntp)
+            startNtpSync();
+    } else
+        m_ntp.release();
+}
+
+void Clock::syncNow()
+{
+    if (isSynchronizing())
+        return; // Do not do anything if a synchronization is ongoing
+
+    switch (m_settings.get().syncSource)
+    {
+        case Settings::SyncSource::Rtc:
+            m_rtcSync = SyncingFromRtc;
+            m_lastRtcSec = m_tm.tm_sec;
+            break;
+        case Settings::SyncSource::Ntp:
+            startNtpSync();
+            break;
+        case Settings::SyncSource::Gps:
+            startGpsSync();
+            break;
+    } 
+}
+
+void Clock::startNtpSync()
+{
+    // TODO: test behavior if the Wifi connection has been lost
+    auto status = Wifi::linkStatus();
+    TRACE << "Wifi link status: " <<status;
+    if (status != Wifi::Connected)
+    {
+        TRACE << "Wifi::connectAsync";
+        Wifi::connectAsync();
+        TRACE << "Done";
+        m_extSync = NtpWaitingForWifi;
+    } else
+    {
+        TRACE << "Already connected";
+        if (m_ntp)
+        {
+            m_ntp->startRequest();
+            m_extSync = NtpInProgress;
+        }
+    }
+}
+
+void Clock::startGpsSync()
+{
+    m_gps.setEnabled(true);
+    m_extSync = GpsInProgress;
 }
 
 void Clock::onExternalTimeReceived(time_t utcTime, uint32_t ms)
 {
     TRACE << "Received external UTC time:" << utcTime <<", setting it";
-    m_time = utcTime + UTC_OFFSET * 60 * 60;
+    time_t newTime = utcTime + UTC_OFFSET * 60 * 60;
+
+    TRACE << "Drift:"
+          << (m_time * 1000 + m_tickCount * 1000 / m_tickCount.wrapValue() - newTime * 1000 - ms)
+        << "ms";
+
+    m_time = newTime;
     setTmFromTime();
     m_tickCount = ms * m_tickCount.wrapValue() / 1000;
     m_clockAdjusted = true;
 
-    // Now that we got the time from NTP, plan RTC sync at the next second change.
+    m_extSync = Inactive;
+
+    // Now that we got the time from outside, plan RTC sync at the next second change.
     m_rtcSync = SyncingToRtc;
 
-    // Disable GPS as the clock is now synchronized
+    // Disable GPS as it is no longer needed, in case the clock was synchronized from it.
     m_gps.setEnabled(false);
 }
 
@@ -69,20 +134,24 @@ void Clock::tick(bool &clockAdjusted, Settings::AlarmMode &reachedAlarmMode)
     clockAdjusted = false;
     reachedAlarmMode = Settings::AlarmMode::Off;
 
-    m_tickCount.increment();
+    if (m_tickCount.increment())
+    {
+        m_time++;
+        setTmFromTime();
+    }
 
     if (m_rtc && m_rtcSync == SyncingFromRtc) // RTC available and synchronizing with it?
     {
-        TRACE << "Synchronizing with RTC";
+//        TRACE << "Synchronizing with RTC";
         tm rtcTime;
         if (m_rtc->read(rtcTime))
         {
             if (rtcTime.tm_sec != m_lastRtcSec)
             {
-                TRACE << "done";
+                TRACE << "Sync from RTC done";
+
                 // The second just changed in the RTC, synchronize.
                 setFromNonDstConsideringTm(rtcTime);
-                m_tickCount = 0;
                 m_rtcSync = SyncDone;
             }
         } else
@@ -92,26 +161,46 @@ void Clock::tick(bool &clockAdjusted, Settings::AlarmMode &reachedAlarmMode)
         }
     } else
     {
-        // Count time in the program. No longer read from the RTC. Update it if needed.
-        if (m_tickCount == 0)
+        // Sync to RTC if needed
+        if (m_tickCount == 0 && m_rtc && m_rtcSync == SyncingToRtc)
         {
-            m_time++;
-            setTmFromTime();
+            TRACE << "Set RTC";
 
-            if (m_rtc && m_rtcSync == SyncingToRtc)
-            {
-                TRACE << "Set RTC";
+            // To avoid ambiguity, save the time without DST consideration into the RTC. Thus,
+            // on the next start, m_dst will be able to determine if DST is active only by 
+            // looking at the time and date.
+            tm tm = *localtime(&m_time);
 
-                // To avoid ambiguity, save the time without DST consideration into the RTC. Thus,
-                // on the next start, m_dst will be able to determine if DST is active only by 
-                // looking at the time and date.
-                tm tm = *localtime(&m_time);
-
-                if (m_rtc->write(tm))
-                    m_rtcSync = SyncDone;
-            }
+            if (m_rtc->write(tm))
+                m_rtcSync = SyncDone;
         }
     }   
+
+    // Monitor ongoing Wi-Fi connection.
+    if (m_extSync == NtpWaitingForWifi)
+    {
+        auto status = Wifi::linkStatus();
+        switch (status)
+        {
+            case Wifi::Connecting:
+            case Wifi::NoIp:
+                // Continue waiting for connection
+                break;
+            case Wifi::Connected:
+                if (m_ntp)
+                {
+                    TRACE << "Wifi connected, start NTP request";
+                    m_ntp->startRequest();
+                    TRACE << "Request started";
+                    m_extSync = NtpInProgress;
+                } else
+                    m_extSync = Inactive;
+                break;
+            default:
+                // Connection failed
+                m_extSync = Inactive;
+        }
+    }
 
     if (m_tickCount == 0 && m_tm.tm_sec == 0)
     {
@@ -154,6 +243,7 @@ void Clock::tick(bool &clockAdjusted, Settings::AlarmMode &reachedAlarmMode)
         clockAdjusted = true;
     } 
 }
+// TODO: shorten this function
 
 void Clock::setTmFromTime()
 {
@@ -177,7 +267,14 @@ void Clock::set(const tm &tm)
 // tm is passed by copy so that its address can be passed to mktime
 void Clock::setFromNonDstConsideringTm(tm tm)
 {
-    m_time = mktime(&tm);
+    time_t newTime = mktime(&tm);
+
+    TRACE << "Drift:"
+          << (m_time * m_tickCount.wrapValue() + m_tickCount - newTime * m_tickCount.wrapValue()) * 1000 / m_tickCount.wrapValue()
+          << "ms";
+
+    m_time = newTime;
+    m_tickCount = 0;
     setTmFromTime();
 
     m_clockAdjusted = true;

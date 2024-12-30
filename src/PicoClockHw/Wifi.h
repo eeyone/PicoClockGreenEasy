@@ -20,10 +20,13 @@ public:
     static bool init();
     static void deinit();
     static bool connectBlocking();
+    static bool connectAsync();
     static Status linkStatus();
 
 private:
     static Status m_connectResult;
+
+    static bool handleConnectResult(int res);
 };
 
 #ifndef PICO_CYW43_SUPPORTED

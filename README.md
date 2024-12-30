@@ -14,7 +14,7 @@ This project is an easy-to-use firmware for the Waveshare Pico-Clock-Green writt
     - stopwatch
     - hourly chime
     - auto light, to automatically adjust the brightness of the leds depending on the ambient light
-- automatic time synchronization:
+- automatic time and date synchronization:
     - NTP synchronization over Wi-Fi (requires a development environment to set the SSID and password)
     - GPS synchronization (requires an additional GPS module)
 - additional:
@@ -124,25 +124,34 @@ This is the full definition of the menu structure. Use the "enter/set" button to
     - stopwatch: start/stop
     - reset: reset stopwatch to zero
     - exit: leave submenu
-- wifi status (no actual function)
+- clock sync: enter submenu
+    - source -> set sync source (RTC, NTP or GPS)
+    - sync now: synchronize with the selected source
+    - wifi (show wifi connection status, no actual function)
+    - exit: leave submenu
 - (if auto light is off) options &rarr; set auto scroll &rarr; set time format &rarr; set date format &rarr; set hourly chime &rarr; set auto light -> set brightness
 - (if auto light is on) options &rarr; set auto scroll &rarr; set time format &rarr; set date format &rarr; set hourly chime &rarr; set auto light -> set dark brightness -> set dim brightness -> set max brightness
 
 
-## Using NTP synchronization
+## Clock synchronization
+At start-up, the clock synchronizes itself with the source selected in the "clock sync" submenu. A synchronization can also be triggered manually using the "sync now" function. Whenever a synchronization is in progress, the °F and °C indicators blink slowly.
+
+NTP and GPS requires some configuration:
+
+### Using NTP synchronization
 
 If you have a Pico W, you can use NTP to synchronize date/time at start-up. For the moment, this requires a build environment, as the Wi-Fi SSID and password need to be configured at build time. Additional possibilities may get added in future versions.
 
 This configuration is done by setting the WIFI_SSID and WIFI_PASSWORD macros in the UserConfig.cmake file (between the escaped quotes). Additionally, the UTC offset also needs to be set in UTC_OFFSET, as the NTP server provides UTC time and does not know where you are located. After configuring, follow the steps of the "Building from the source code" section above. 
 
-When running the firmware, move to the "wifi status" function to check if your settings are working.
+When running the firmware, go the the "clock sync" submenu and set the sync source to "NTP". You can use the "wifi" function to check if your settings are working. Note that the Wi-Fi connection will only be attempted when actually synchronizing (at start-up or manually). The connection is then kept open.
 
 
-## Using GPS synchronization
+### Using GPS synchronization
 
-If you don't have a Pico W, or want to benefit from a synchronized clock without having to setup a Wi-Fi connection, you can connect an additional GPS module that will provide date and time information to the firmware. No software configuration change is necessary.
+If you don't have a Pico W, or want to benefit from a synchronized clock without having to setup a Wi-Fi connection, you can connect an additional GPS module that will provide date and time information to the firmware. 
 
-I tested this feature using a NEO-6M GPS module. It should work with other modules that have an UART interface that uses the NMEA protocol. Here is the pin wiring to use:
+I tested this feature using a NEO-6M GPS module. It should work with other modules that have an UART interface that uses the NMEA protocol. Here is the pin wiring I used:
 |GPS module|Pico    |
 |----------|--------|
 |VCC       |3V3(OUT)|
@@ -150,10 +159,11 @@ I tested this feature using a NEO-6M GPS module. It should work with other modul
 |TX        |GP1     |
 |GND       |GND     |
 
+When running the firmware, go to the "clock sync" submenu and set the sync source to "GPS".
 
 ## Configuring daylight saving time
 
-The clock can be configured to automatically observe daylight saving time. For the moment, this requires a build environment, as the UTC offset and location need to be configured at build time. Also, only the European Union variant of daylight saving time is supported.
+The clock can be configured to automatically observe daylight saving time. For the moment, this requires a build environment, as the UTC offset and location need to be configured at build time. Currently, only the European Union and United States variants of daylight saving time are supported.
 
 The configuration is done by setting the UTC_OFFSET and DST_LOCATION macros in the UserConfig.cmake file. After configuring, follow the steps of the "Building from the source code" section above. At runtime, the clock will then automatically advance when daylight saving time begins and change back to regular time when it ends.
 

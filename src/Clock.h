@@ -25,7 +25,7 @@ public:
     // the object.
     Clock(int tickPerSec, Settings &settings);
 
-    void startSyncFromNtp();
+    void onWifiInited();
     void startSyncToRtc()
     {
         m_rtcSync = SyncingToRtc;
@@ -64,6 +64,13 @@ public:
         return m_rtc.get();
     }
 
+    bool isSynchronizing() const
+    {
+        return m_rtcSync == SyncingFromRtc || m_extSync != Inactive;
+    }
+
+    void syncNow();
+
 private:
     struct Time
     {
@@ -76,7 +83,7 @@ private:
         bool operator <=(const Time &other) const;
         bool isValid() const;
     };
-
+  
     void onExternalTimeReceived(time_t utcTime, uint32_t ms);
     bool alarmReached(AlarmId id) const;
     const Settings::Alarm &alarm(AlarmId id) const;
@@ -95,11 +102,22 @@ private:
     void setTmFromTime();
     void setFromNonDstConsideringTm(tm tm); 
 
+    void startNtpSync();
+    void startGpsSync();
+
     enum RtcSync
     {
         SyncingFromRtc,
         SyncingToRtc,
         SyncDone
+    };
+
+    enum ExternalSync
+    {
+        Inactive,
+        NtpWaitingForWifi,
+        NtpInProgress,
+        GpsInProgress
     };
 
     CyclicCounter m_tickCount;
@@ -109,6 +127,7 @@ private:
     Gps m_gps;
     RtcSync m_rtcSync = SyncingFromRtc;
     int m_lastRtcSec;
+    ExternalSync m_extSync = Inactive;
 
     DaylightSavingTime m_dst;
     

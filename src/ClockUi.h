@@ -20,9 +20,9 @@ class ClockUi
 
 public:
     ClockUi();
-    void startNtpRequest()
+    void onWifiInited()
     {
-        m_clock.startSyncFromNtp();
+        m_clock.onWifiInited();
     }
 
 private:
@@ -31,6 +31,7 @@ private:
         NoEditing = 0
     };
 
+    Settings m_settings; // Must be initialized before m_clock as its constructor reads settings
     Clock m_clock;
     bool m_forceRefresh = true;
     CyclicCounter m_blinkingCounter {Display::FRAME_RATE, -1};
@@ -41,7 +42,6 @@ private:
     Button m_upButton{K1};
     Button m_downButton{K0};
     Buzzer m_buzzer;
-    Settings m_settings;
     int m_secondsWithoutUserInput = 0;
     bool m_dayLight = false;
     Settings::AlarmMode m_alarmRinging = Settings::AlarmMode::Off;

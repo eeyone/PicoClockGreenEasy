@@ -7,15 +7,16 @@
 
 #include "Functions/Action.h"
 #include "Functions/Alarm.h"
+#include "Functions/AlarmSubmenu.h"
 #include "Functions/Countdown.h"
 #include "Functions/Date.h"
 #include "Functions/Options.h"
-#include "Functions/AlarmSubmenu.h"
 #include "Functions/SkipNextAlarm.h"
 #include "Functions/Stopwatch.h"
 #include "Functions/Submenu.h"
-#include "Functions/Time.h"
+#include "Functions/SyncSource.h"
 #include "Functions/Temperature.h"
+#include "Functions/Time.h"
 #include "Functions/WifiStatus.h"
 
 #include <iostream>
@@ -61,7 +62,8 @@ ClockUi::ClockUi() : m_clock(Display::FRAME_RATE, m_settings)
         addFunctionAndReturnPtr<Submenu>(uiText(TextId::Countdown), &m_rootMenu);
     Submenu *stopwatchSubmenu = 
         addFunctionAndReturnPtr<Submenu>(uiText(TextId::Stopwatch), &m_rootMenu);
-    addFunction<WifiStatus>();
+    Submenu *syncSubmenu = 
+        addFunctionAndReturnPtr<Submenu>(uiText(TextId::Sync), &m_rootMenu);
     addFunction<Options>();
 
     TRACE << "Add functions of the alarm submenu";
@@ -78,6 +80,13 @@ ClockUi::ClockUi() : m_clock(Display::FRAME_RATE, m_settings)
     m_stopwatchFunc = stopwatchSubmenu->addFunction<Stopwatch>(this);
     stopwatchSubmenu->addFunction<Action>(
         this, uiText(TextId::Reset), std::bind(&Stopwatch::reset, m_stopwatchFunc));
+
+    TRACE << "Add functions of the Sync submenu";
+    syncSubmenu->addFunction<SyncSource>(this);
+    // TODO: improve user feedback
+    syncSubmenu->addFunction<Action>(
+        this, uiText(TextId::SyncNow), std::bind(&Clock::syncNow, &m_clock));
+    syncSubmenu->addFunction<WifiStatus>(this);
 
     // Remember the last used time function in case auto scroll is enabled.
     if (m_currentMenu->at(m_curFuncIdx)->isTimeFunction())
@@ -307,6 +316,14 @@ void ClockUi::renderIndicators()
     } else
         alarmOnIndicator = false;
     m_frameBuffer.putIndicator(Bitmap::AlarmOn, alarmOnIndicator);
+
+    // Render the °F & °C indicators that blink when synchonization is ongoing.
+    if (m_clock.isSynchronizing())
+    {
+        bool on = m_clock.get().tm_sec % 2;
+        m_frameBuffer.putIndicator(Bitmap::F, on);
+        m_frameBuffer.putIndicator(Bitmap::C, on);
+    }
 }
 
 void ClockUi::handleControlFromConsole()

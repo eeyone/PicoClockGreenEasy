@@ -61,6 +61,16 @@ enum class TextId
     DaySlashMonth,
     DayDotMonth,
 
+    // Sync menu
+    Sync,
+    SyncNow,
+    Source,
+
+    // Sync source. Must match Settings::SyncSource
+    Rtc,
+    Ntp,
+    Gps,
+
     TextCount
 };
 
