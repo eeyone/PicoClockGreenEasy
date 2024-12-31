@@ -1,5 +1,7 @@
 #pragma once
 
+#include <string>
+
 class Wifi
 {
 public:
@@ -22,6 +24,7 @@ public:
     static bool connectBlocking();
     static bool connectAsync();
     static Status linkStatus();
+    static std::string linkStatusToString(Status s);
 
 private:
     static Status m_connectResult;

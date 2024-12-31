@@ -13,7 +13,7 @@ namespace
             "OK",
             "Not available",
             "Down",
-            "Connecting",
+            "Joining",
             "No IP",
             "Connected",
             "Connection failed",

@@ -53,7 +53,7 @@ bool Wifi::connectBlocking()
 
 bool Wifi::connectAsync()
 {
-    TRACE << "cyw43_arch_wifi_connect_async";
+//    TRACE << "cyw43_arch_wifi_connect_async";
     int res = cyw43_arch_wifi_connect_async(WIFI_SSID, WIFI_PASSWORD, CYW43_AUTH_WPA2_AES_PSK);
     TRACE << "Result: " << res;
     return handleConnectResult(res);
@@ -106,4 +106,27 @@ Wifi::Status Wifi::linkStatus()
             TRACE << "Unknown result:" << res;
             return Unknown;
     }
+}
+
+std::string Wifi::linkStatusToString(Status s)
+{
+    switch (s)
+    {
+#define STATUS(item) \
+    case item:       \
+        return #item;
+
+        STATUS(Unknown)
+        STATUS(OK)
+        STATUS(NotAvailable)
+        STATUS(Down)
+        STATUS(Connecting)
+        STATUS(NoIp)
+        STATUS(Connected)
+        STATUS(ConnectionFailed)
+        STATUS(NoNetworkFound)
+        STATUS(AuthenticationFailed)
+    }
+
+    return "";
 }

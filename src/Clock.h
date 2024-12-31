@@ -85,6 +85,8 @@ private:
     };
   
     void onExternalTimeReceived(time_t utcTime, uint32_t ms);
+    void monitorWifiConnection();
+    Settings::AlarmMode checkIfAlarmReached();
     bool alarmReached(AlarmId id) const;
     const Settings::Alarm &alarm(AlarmId id) const;
     bool nextAlarmAfter(

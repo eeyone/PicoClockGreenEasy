@@ -82,12 +82,12 @@ void Clock::startNtpSync()
 {
     // TODO: test behavior if the Wifi connection has been lost
     auto status = Wifi::linkStatus();
-    TRACE << "Wifi link status: " <<status;
+    TRACE << "Wifi link status: " <<Wifi::linkStatusToString(status);
     if (status != Wifi::Connected)
     {
         TRACE << "Wifi::connectAsync";
         Wifi::connectAsync();
-        TRACE << "Done";
+        TRACE << "Wifi::connectAsync done";
         m_extSync = NtpWaitingForWifi;
     } else
     {
@@ -174,9 +174,22 @@ void Clock::tick(bool &clockAdjusted, Settings::AlarmMode &reachedAlarmMode)
             if (m_rtc->write(tm))
                 m_rtcSync = SyncDone;
         }
-    }   
+    }
 
-    // Monitor ongoing Wi-Fi connection.
+    monitorWifiConnection();
+
+    if (m_tickCount == 0 && m_tm.tm_sec == 0)
+        reachedAlarmMode = checkIfAlarmReached();
+
+    if (m_clockAdjusted)
+    {
+        m_clockAdjusted = false;
+        clockAdjusted = true;
+    } 
+}
+
+void Clock::monitorWifiConnection()
+{
     if (m_extSync == NtpWaitingForWifi)
     {
         auto status = Wifi::linkStatus();
@@ -197,53 +210,49 @@ void Clock::tick(bool &clockAdjusted, Settings::AlarmMode &reachedAlarmMode)
                     m_extSync = Inactive;
                 break;
             default:
-                // Connection failed
+                TRACE << "Connection failed";
                 m_extSync = Inactive;
         }
     }
+}
 
-    if (m_tickCount == 0 && m_tm.tm_sec == 0)
+Settings::AlarmMode Clock::checkIfAlarmReached()
+{
+    Settings::AlarmMode reachedAlarmMode = Settings::AlarmMode::Off;
+    const struct Settings::Alarm *reachedAlarm = nullptr;
+    if (alarmReached(Alarm1))
     {
-        const struct Settings::Alarm *reachedAlarm = nullptr;
-        if (alarmReached(Alarm1))
+        reachedAlarm = &m_settings.get().alarm1;
+        reachedAlarmMode = m_settings.get().alarm1.mode;
+    } else if (alarmReached(Alarm2))
+    {
+        reachedAlarm = &m_settings.get().alarm2;
+        reachedAlarmMode = m_settings.get().alarm2.mode;
+    }
+
+    if (reachedAlarm != nullptr)
+    {
+        // Disable the alarm if it has to ring only once.
+        if (reachedAlarm->ringsOnce())
         {
-            reachedAlarm = &m_settings.get().alarm1;
-            reachedAlarmMode = m_settings.get().alarm1.mode;
-        } else if (alarmReached(Alarm2))
-        {
-            reachedAlarm = &m_settings.get().alarm2;
-            reachedAlarmMode = m_settings.get().alarm2.mode;
+            struct Settings::Alarm &alarm = 
+                reachedAlarm == 
+                    &m_settings.get().alarm1 ? m_settings.modify().alarm1 : m_settings.modify().alarm2;
+
+            alarm.mode = Settings::AlarmMode::Off;
         }
 
-        if (reachedAlarm != nullptr)
+        if (m_settings.get().skipNextAlarm)
         {
-            // Disable the alarm if it has to ring only once.
-            if (reachedAlarm->ringsOnce())
-            {
-                struct Settings::Alarm &alarm = 
-                    reachedAlarm == 
-                        &m_settings.get().alarm1 ? m_settings.modify().alarm1 : m_settings.modify().alarm2;
-
-                alarm.mode = Settings::AlarmMode::Off;
-            }
-
-            if (m_settings.get().skipNextAlarm)
-            {
-                // This alarm must be skipped. Disable the "skip next alarm" function and report 
-                // that no alarm was reached.
-                m_settings.modify().skipNextAlarm = false;
-                reachedAlarmMode = Settings::AlarmMode::Off;
-            }
+            // This alarm must be skipped. Disable the "skip next alarm" function and report 
+            // that no alarm was reached.
+            m_settings.modify().skipNextAlarm = false;
+            reachedAlarmMode = Settings::AlarmMode::Off;
         }
     }
 
-    if (m_clockAdjusted)
-    {
-        m_clockAdjusted = false;
-        clockAdjusted = true;
-    } 
+    return reachedAlarmMode;
 }
-// TODO: shorten this function
 
 void Clock::setTmFromTime()
 {
