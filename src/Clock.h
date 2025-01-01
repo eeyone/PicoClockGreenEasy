@@ -102,8 +102,9 @@ private:
         unsigned int &enabledAlarmsMask) const;
     Time alarmTimeAtDay(AlarmId alarmId, int weekday, unsigned int enabledAlarmsMask) const;
     void setTmFromTime();
-    void setFromNonDstConsideringTm(tm tm); 
+    void setFromNonDstConsideringTm(tm tm);
 
+    void startRtcSync();
     void startNtpSync();
     void startGpsSync();
 

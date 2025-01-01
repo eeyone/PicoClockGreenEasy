@@ -5,10 +5,7 @@
 Clock::Clock(int tickPerSec, Settings &settings) : 
     m_tickCount(tickPerSec), 
     m_settings(settings),
-#if USE_RTC
     m_rtc(std::make_unique<Rtc>()),
-    // TODO: Find why 2 days of the weeks are on when starting with USE_RTC==0
-#endif
     m_ntp(std::make_unique<Ntp>())
 {
     // Initialize m_time and m_tm from the RTC. It will be used for displaying time 
@@ -17,10 +14,7 @@ Clock::Clock(int tickPerSec, Settings &settings) :
     if (m_rtc != nullptr && m_rtc->read(rtcTime))
     {
         setFromNonDstConsideringTm(rtcTime);
-        m_rtcSync = SyncingFromRtc;
-
-        TRACE << "Set m_lastRtcSec to be able to detect when the second changes in the RTC";
-        m_lastRtcSec = rtcTime.tm_sec;
+        startRtcSync();
     } else
     {
         TRACE << "No RTC available";
@@ -61,13 +55,15 @@ void Clock::onWifiInited()
 void Clock::syncNow()
 {
     if (isSynchronizing())
-        return; // Do not do anything if a synchronization is ongoing
+    {
+        TRACE << "Synchronization already in progress";
+        return;
+    }
 
     switch (m_settings.get().syncSource)
     {
         case Settings::SyncSource::Rtc:
-            m_rtcSync = SyncingFromRtc;
-            m_lastRtcSec = m_tm.tm_sec;
+            startRtcSync();
             break;
         case Settings::SyncSource::Ntp:
             startNtpSync();
@@ -78,9 +74,19 @@ void Clock::syncNow()
     } 
 }
 
+void Clock::startRtcSync()
+{
+    if (m_rtc)
+    {
+        TRACE << "Set m_lastRtcSec to be able to detect when the second changes in the RTC";
+        m_lastRtcSec = m_tm.tm_sec;
+        m_rtcSync = SyncingFromRtc;
+    }
+}
+
 void Clock::startNtpSync()
 {
-    // TODO: test behavior if the Wifi connection has been lost
+    TRACE << "startNtpSync";
     auto status = Wifi::linkStatus();
     TRACE << "Wifi link status: " <<Wifi::linkStatusToString(status);
     if (status != Wifi::Connected)
