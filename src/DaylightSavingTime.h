@@ -9,7 +9,8 @@ public:
     {
         Unknown,
         Europe,
-        Usa
+        Usa,
+        USA = Usa,
     };
 
     time_t considerDst(time_t time);
