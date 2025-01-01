@@ -3,6 +3,7 @@
 #include <pico/time.h>
 #include <string>
 #include <functional>
+#include <time.h>
 
 class Gps
 {
