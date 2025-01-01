@@ -10,9 +10,9 @@ add_compile_definitions(
     WIFI_PASSWORD=\"\"
     UTC_OFFSET=1 # UTC offset as real number of hours. For example, set 5.5 for UTC+05:30.
 
-    # Set location for automatic daylight saving time observation. Currently, only "Europe" and
-    # "Unknown" (no automatic change) are supported.
-    DST_LOCATION=Europe
+    # Set location for automatic daylight saving time observation. 
+    # Possible values: Europe, USA or Unknown (no automatic change)
+    DST_LOCATION=Unknown
 
     SIMULATE_BUTTONS_FROM_STDIO
 )
