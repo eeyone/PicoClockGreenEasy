@@ -1,6 +1,7 @@
 #include "Platform.h"
 #include "Rtc.h"
 #include <pico/stdlib.h>
+#include <pico/rand.h>
 
 void Platform::initStdIo()
 {
@@ -24,4 +25,9 @@ int Platform::getCharNonBlocking()
 uint64_t Platform::timeUs()
 {
     return time_us_64();
+}
+
+uint32_t Platform::randomNumber32()
+{
+    return get_rand_32();
 }

@@ -21,6 +21,15 @@ public:
         AlarmCount
     };
 
+    struct SyncInfo
+    {
+        int dailySyncHour = 0;
+        int dailySyncMin = 0;
+        tm lastSyncTm = {};
+        Settings::SyncSource lastSyncSource = Settings::SyncSource::Rtc;
+        int lastSyncDriftMs = 0;
+    };
+
     // Beware that the object keeps a reference on settings, so it must exists at least as long as
     // the object.
     Clock(int tickPerSec, Settings &settings);
@@ -70,6 +79,7 @@ public:
     }
 
     void syncNow();
+    void syncInfo(SyncInfo &info);
 
 private:
     struct Time
@@ -83,8 +93,8 @@ private:
         bool operator <=(const Time &other) const;
         bool isValid() const;
     };
-  
-    void onExternalTimeReceived(time_t utcTime, uint32_t ms);
+
+    void onExternalTimeReceived(time_t utcTime, uint32_t ms, Settings::SyncSource source);
     void monitorWifiConnection();
     Settings::AlarmMode checkIfAlarmReached();
     bool alarmReached(AlarmId id) const;
@@ -102,8 +112,8 @@ private:
         unsigned int &enabledAlarmsMask) const;
     Time alarmTimeAtDay(AlarmId alarmId, int weekday, unsigned int enabledAlarmsMask) const;
     void setTmFromTime();
-    void setFromNonDstConsideringTm(tm tm);
-
+    void setFromRtcTime(tm tm);
+    void logSync(Settings::SyncSource source, int driftMs);
     void startRtcSync();
     void startNtpSync();
     void startGpsSync();
@@ -125,6 +135,7 @@ private:
 
     CyclicCounter m_tickCount;
     Settings &m_settings;
+
     std::unique_ptr<Rtc> m_rtc; // As unique_ptr so that it can be easily disabled
     std::unique_ptr<Ntp> m_ntp;
     Gps m_gps;
@@ -132,8 +143,9 @@ private:
     int m_lastRtcSec;
     ExternalSync m_extSync = Inactive;
 
+    SyncInfo m_syncInfo;
+
     DaylightSavingTime m_dst;
-    
     time_t m_time = 0; // Current time as unix time, local (not UTC), not considering DST
     tm m_tm = {}; // Current time as tm, considering DST
 

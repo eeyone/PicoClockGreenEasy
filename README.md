@@ -14,14 +14,15 @@ This project is an easy-to-use firmware for the Waveshare Pico-Clock-Green writt
     - stopwatch
     - hourly chime
     - auto light, to automatically adjust the brightness of the leds depending on the ambient light
-- automatic time and date synchronization:
+- time and date synchronization:
     - NTP synchronization over Wi-Fi (requires a development environment to set the SSID and password)
     - GPS synchronization (requires an additional GPS module)
+    - automatic daily re-synchronization
 - additional:
     - menu based user interface with horizontal and vertical scrolling
     - instant start up: no splash screen or animation, just power the device and you have a clock
     - 3 time display styles: hour:min:sec, hour:min + bar (the bar is a kind of horizontal hourglass to show seconds), hour:min
-    - automatic daylight saving time observation (currently only for European Union)
+    - automatic daylight saving time observation (currently only for European Union and USA)
     - persistent saving of clock settings to flash memory
     - optional hourly chime activation using the ambient light sensor
     - configurable brightness: 
@@ -127,6 +128,9 @@ This is the full definition of the menu structure. Use the "enter/set" button to
 - clock sync: enter submenu
     - source -> set sync source (RTC, NTP or GPS)
     - sync now: synchronize with the selected source
+    - daily sync time (show when the clock automatically re-synchronizes, no actual function)
+    - last sync (show timestamp of last synchronization and the used source, no actual function)
+    - last drift (show how much the internal clock had drifted last time it was synchronized, no actual function)
     - wifi (show wifi connection status, no actual function)
     - exit: leave submenu
 - (if auto light is off) options &rarr; set auto scroll &rarr; set time format &rarr; set date format &rarr; set hourly chime &rarr; set auto light -> set brightness
@@ -134,7 +138,7 @@ This is the full definition of the menu structure. Use the "enter/set" button to
 
 
 ## Clock synchronization
-At start-up, the clock synchronizes itself with the source selected in the "clock sync" submenu. A synchronization can also be triggered manually using the "sync now" function. Whenever a synchronization is in progress, the °F and °C indicators blink slowly.
+At start-up, the clock synchronizes itself with the source selected in the "clock sync" submenu. It then synchronizes itself again every day at a random time generated at start-up. A synchronization can also be triggered manually using the "sync now" function. Whenever a synchronization is in progress, the °F and °C indicators blink slowly.
 
 NTP and GPS requires some configuration:
 

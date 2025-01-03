@@ -9,4 +9,5 @@ public:
     static void runMainLoop();
     static int getCharNonBlocking();
     static uint64_t timeUs();
+    static uint32_t randomNumber32();
 };

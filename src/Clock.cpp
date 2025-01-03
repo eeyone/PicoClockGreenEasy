@@ -1,6 +1,7 @@
 #include "Clock.h"
 #include "Utils/Trace.h"
 #include "PicoClockHw/Wifi.h"
+#include "PicoClockHw/Platform.h"
 
 Clock::Clock(int tickPerSec, Settings &settings) : 
     m_tickCount(tickPerSec), 
@@ -13,7 +14,7 @@ Clock::Clock(int tickPerSec, Settings &settings) :
     tm rtcTime;
     if (m_rtc != nullptr && m_rtc->read(rtcTime))
     {
-        setFromNonDstConsideringTm(rtcTime);
+        setFromRtcTime(rtcTime);
         startRtcSync();
     } else
     {
@@ -22,10 +23,18 @@ Clock::Clock(int tickPerSec, Settings &settings) :
         m_rtcSync = SyncDone;
     }
 
+    // Generate random time for the daily synchronization
+    uint32_t randomNumber = Platform::randomNumber32();
+    m_syncInfo.dailySyncHour = (randomNumber / 60) % 24;
+    m_syncInfo.dailySyncMin = randomNumber % 60;
+
+    TRACE << "Daily sync time: " << m_syncInfo.dailySyncHour << ":" << m_syncInfo.dailySyncMin;
+
     // Initialize GPS synchronization. NTP will be initialized later, as it requires the Wi-Fi to be
     // initialized.
     using namespace std::placeholders;
-    m_gps.setTimeCallback(std::bind(&Clock::onExternalTimeReceived, this, _1, _2));
+    m_gps.setTimeCallback(
+        std::bind(&Clock::onExternalTimeReceived, this, _1, _2, Settings::SyncSource::Gps));
     m_gps.setTimeoutCallback([this]()
                              { 
             m_gps.setEnabled(false);
@@ -41,7 +50,8 @@ void Clock::onWifiInited()
     using namespace std::placeholders;
     if (m_ntp->init())
     {
-        m_ntp->setTimeCallback(std::bind(&Clock::onExternalTimeReceived, this, _1, _2));
+        m_ntp->setTimeCallback(
+            std::bind(&Clock::onExternalTimeReceived, this, _1, _2, Settings::SyncSource::Ntp));
         m_ntp->setFailCallback([this](Ntp::State reason)
                                { m_extSync = Inactive; });
         
@@ -112,17 +122,15 @@ void Clock::startGpsSync()
     m_extSync = GpsInProgress;
 }
 
-void Clock::onExternalTimeReceived(time_t utcTime, uint32_t ms)
+void Clock::onExternalTimeReceived(time_t utcTime, uint32_t ms, Settings::SyncSource source)
 {
     TRACE << "Received external UTC time:" << utcTime <<", setting it";
     time_t newTime = utcTime + UTC_OFFSET * 60 * 60;
-
-    TRACE << "Drift:"
-          << (m_time * 1000 + m_tickCount * 1000 / m_tickCount.wrapValue() - newTime * 1000 - ms)
-        << "ms";
-
+    int drift = 
+        (m_time * 1000 + m_tickCount * 1000 / m_tickCount.wrapValue() - newTime * 1000 - ms);
     m_time = newTime;
     setTmFromTime();
+    logSync(source, drift);
     m_tickCount = ms * m_tickCount.wrapValue() / 1000;
     m_clockAdjusted = true;
 
@@ -157,7 +165,7 @@ void Clock::tick(bool &clockAdjusted, Settings::AlarmMode &reachedAlarmMode)
                 TRACE << "Sync from RTC done";
 
                 // The second just changed in the RTC, synchronize.
-                setFromNonDstConsideringTm(rtcTime);
+                setFromRtcTime(rtcTime);
                 m_rtcSync = SyncDone;
             }
         } else
@@ -184,8 +192,15 @@ void Clock::tick(bool &clockAdjusted, Settings::AlarmMode &reachedAlarmMode)
 
     monitorWifiConnection();
 
+    // Handle events to be checked on every minute.
     if (m_tickCount == 0 && m_tm.tm_sec == 0)
+    {
         reachedAlarmMode = checkIfAlarmReached();
+
+        // Perform the daily synchronization if the time is reached.
+        if (m_tm.tm_min == m_syncInfo.dailySyncMin && m_tm.tm_hour == m_syncInfo.dailySyncHour)
+            syncNow();
+    }
 
     if (m_clockAdjusted)
     {
@@ -280,19 +295,31 @@ void Clock::set(const tm &tm)
 }
 
 // tm is passed by copy so that its address can be passed to mktime
-void Clock::setFromNonDstConsideringTm(tm tm)
+void Clock::setFromRtcTime(tm tm)
 {
     time_t newTime = mktime(&tm);
-
-    TRACE << "Drift:"
-          << (m_time * m_tickCount.wrapValue() + m_tickCount - newTime * m_tickCount.wrapValue()) * 1000 / m_tickCount.wrapValue()
-          << "ms";
-
+    int drift =
+        (m_time * m_tickCount.wrapValue() + m_tickCount - newTime * m_tickCount.wrapValue()) *
+        1000 /
+        m_tickCount.wrapValue();
     m_time = newTime;
     m_tickCount = 0;
     setTmFromTime();
+    logSync(Settings::SyncSource::Rtc, drift);
 
     m_clockAdjusted = true;
+}
+
+void Clock::logSync(Settings::SyncSource source, int driftMs)
+{
+    m_syncInfo.lastSyncTm = m_tm;
+    m_syncInfo.lastSyncSource = source;
+    m_syncInfo.lastSyncDriftMs = driftMs;
+}
+
+void Clock::syncInfo(SyncInfo &info)
+{
+    info = m_syncInfo;
 }
 
 bool Clock::nextAlarm(int &weekday, int &hour, int &min) const

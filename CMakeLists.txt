@@ -32,6 +32,7 @@ add_executable( ${PROJECT_NAME}
                 src/Functions/SkipNextAlarm.cpp
                 src/Functions/Stopwatch.cpp
                 src/Functions/Submenu.cpp
+                src/Functions/SyncInfo.cpp
                 src/Functions/SyncSource.cpp
                 src/Functions/Temperature.cpp
                 src/Functions/Time.cpp

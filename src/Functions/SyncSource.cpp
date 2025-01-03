@@ -8,9 +8,9 @@ void SyncSource::renderFrame(
         uiText(static_cast<TextId>(
             static_cast<int>(TextId::Rtc) + static_cast<int>(settings().syncSource)));
     if (editedValueIndex == 0)
-        renderScrollingText(frame, fullRefresh, uiText(TextId::Source) + source);
+        renderScrollingText(frame, fullRefresh, uiText(TextId::SourceColon) + source);
     else
-        renderScrollingText(frame, fullRefresh, uiText(TextId::Source), source);
+        renderScrollingText(frame, fullRefresh, uiText(TextId::SourceColon), source);
 }
 
 void SyncSource::modifyValue(int valueIndex, Direction direction)

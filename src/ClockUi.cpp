@@ -14,6 +14,7 @@
 #include "Functions/SkipNextAlarm.h"
 #include "Functions/Stopwatch.h"
 #include "Functions/Submenu.h"
+#include "Functions/SyncInfo.h"
 #include "Functions/SyncSource.h"
 #include "Functions/Temperature.h"
 #include "Functions/Time.h"
@@ -86,6 +87,9 @@ ClockUi::ClockUi() : m_clock(Display::FRAME_RATE, m_settings)
     // TODO: improve user feedback
     syncSubmenu->addFunction<Action>(
         this, uiText(TextId::SyncNow), std::bind(&Clock::syncNow, &m_clock));
+    syncSubmenu->addFunction<SyncInfo>(this, SyncInfo::DailySyncTime);
+    syncSubmenu->addFunction<SyncInfo>(this, SyncInfo::LastSyncTimestamp);
+    syncSubmenu->addFunction<SyncInfo>(this, SyncInfo::LastSyncDrift);
     syncSubmenu->addFunction<WifiStatus>(this);
 
     // Remember the last used time function in case auto scroll is enabled.

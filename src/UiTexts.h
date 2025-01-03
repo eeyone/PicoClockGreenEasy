@@ -6,7 +6,6 @@ enum class TextId
 {
     // For menus
     Alarms = 0,
-    WifiColon,
     Options,
     Exit,
 
@@ -63,8 +62,12 @@ enum class TextId
 
     // Sync menu
     Sync,
+    SourceColon,
     SyncNow,
-    Source,
+    DailySyncTimeColon,
+    LastSyncColon,
+    LastDriftColon,
+    WifiColon,
 
     // Sync source. Must match Settings::SyncSource
     Rtc,
