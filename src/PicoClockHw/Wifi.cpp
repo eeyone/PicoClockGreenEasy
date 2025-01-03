@@ -9,13 +9,6 @@ Wifi::Status Wifi::m_connectResult = Wifi::Unknown;
 
 bool Wifi::init()
 {
-    // Do not initialize the Wi-Fi if no SSID is configured.
-    if (strlen(WIFI_SSID) == 0)
-    {
-        m_connectResult = NotAvailable;
-        return false;
-    }
-
     TRACE << "cyw43_arch_init";
     if (cyw43_arch_init() != 0) 
     {
@@ -53,7 +46,10 @@ bool Wifi::connectBlocking()
 
 bool Wifi::connectAsync()
 {
-//    TRACE << "cyw43_arch_wifi_connect_async";
+    TRACE << "cyw43_arch_wifi_connect_async with ssid=" <<WIFI_SSID;
+    // I am not sure I am getting it right, but if WIFI_SSID and WIFI_PASSWORD are empty strings, 
+    // cyw43_arch_wifi_connect_async seems to reuse previously passed values, even after a power 
+    // cycle. This behavior is not documented.
     int res = cyw43_arch_wifi_connect_async(WIFI_SSID, WIFI_PASSWORD, CYW43_AUTH_WPA2_AES_PSK);
     TRACE << "Result: " << res;
     return handleConnectResult(res);
@@ -84,8 +80,8 @@ Wifi::Status Wifi::linkStatus()
 
 //    TRACE << "cyw43_tcpip_link_status";
     int res = cyw43_tcpip_link_status(&cyw43_state, CYW43_ITF_STA);
-
 //    TRACE << "res:" << res;
+
     switch(res)
     {
         case CYW43_LINK_DOWN:
