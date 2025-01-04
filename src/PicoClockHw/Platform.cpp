@@ -13,7 +13,7 @@ void Platform::runMainLoop()
     while (1)
     {
         sleep_ms(1000);
-        Rtc::onSecond();
+        tight_loop_contents();
     }
 }
 

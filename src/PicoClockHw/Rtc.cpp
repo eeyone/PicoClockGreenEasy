@@ -30,9 +30,9 @@ namespace
     {
         return ((value / 10) << 4) + (value % 10);
     }
-}
 
-Rtc *Rtc::m_instance = nullptr;
+
+} // namespace
 
 Rtc::Rtc()
 {
@@ -45,22 +45,16 @@ Rtc::Rtc()
 
     TRACE << "Initialize the temperature filter";
     m_tempFilter = std::make_unique<MovingAverage<32>>(rawTemperature());
-
-    m_instance = this;
+    m_lastTempMeasurementUs = time_us_64();
 }
 
 Rtc::~Rtc()
 {
-    m_instance = nullptr;
     i2c_deinit(I2C_PORT);
 }
 
 bool Rtc::read(tm &dateTime) const
 {
-    // Fail if another method is currently communicating with the DS3231
-    if (m_communicating)
-        return false;
-
     // Read registers from the DS3231
     // See https://www.analog.com/media/en/technical-documentation/data-sheets/DS3231.pdf for details
     uint8_t registerNumber = 0x00;
@@ -94,10 +88,6 @@ bool Rtc::read(tm &dateTime) const
 
 bool Rtc::write(const tm &dateTime)
 {
-    // Fail if another method is currently communicating with the DS3231
-    if (m_communicating)
-        return false;
-
     unsigned char buffer[8];
     buffer[0] = 0;  // Start writing at register 0
     buffer[1] = toBcd(dateTime.tm_sec);
@@ -127,49 +117,29 @@ bool Rtc::write(const tm &dateTime)
 
 float Rtc::temperature()
 {
-    // Defer temperature measurement to the main loop, as it takes too long for interrupts.
-    m_requestTemp = true;
-
     // As the measured temperature is often hesitating between two values separated by 0.25°, filter
     // using a moving average. This also provides a higher resulting precision.
     float temp = m_tempFilter->get();
-
     TRACE << "Temperature: " << temp;
+
+    // Feed the moving average filter if there has been no measurement for at least half a second.
+    if (time_us_64() >= m_lastTempMeasurementUs + 500000)
+    {
+        m_lastTempMeasurementUs = time_us_64();
+        m_tempFilter->put(rawTemperature());
+    }
+
     return temp;
 }
 
-void Rtc::onSecond()
-{
-    // Do nothing if the instance does not exist yet or no temperature measurement is requested
-    if (m_instance == nullptr || !m_instance->m_requestTemp)
-        return;
-
-    // Acknowledge the request
-    m_instance->m_requestTemp = false;
-
-    TRACE << "Measure";
-    float currentTemp = m_instance->rawTemperature();
-
-    // Prevent access to member variables from interruptions
-    uint32_t interrupts = save_and_disable_interrupts();
-
-    // Update the moving average with this measurement
-    m_instance->m_tempFilter->put(currentTemp);
-
-    // Interrupts may access member variables again
-    restore_interrupts(interrupts);
-}
-
-float Rtc::rawTemperature()
+float Rtc::rawTemperature() const
 {
     // Get temperature from RTC
-    m_communicating = true;
     uint8_t registerNumber = 0x11;
     int result = i2c_write_timeout_us(
         I2C_PORT, DEVICE_ADDRESS, &registerNumber, 1, true, TIMEOUT_US);
     if (result != 1)
     {
-        m_communicating = false;
         TRACE << "i2c_write_timeout_us returned" << result;
         return NAN;
     }
@@ -177,11 +147,9 @@ float Rtc::rawTemperature()
     if (i2c_read_timeout_us(I2C_PORT, DEVICE_ADDRESS, buffer, sizeof(buffer), false, TIMEOUT_US) != 
         sizeof(buffer))
     {
-        m_communicating = false;
         TRACE << "i2c_read_timeout_us failed";
         return NAN;
     }
-    m_communicating = false;
 
     // Calculate temperature as floating point number
     float currentTemp = buffer[0];
