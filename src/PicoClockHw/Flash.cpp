@@ -130,14 +130,11 @@ int64_t Flash::write(alarm_id_t id, void *user_data)
     memcpy(dataCopy.data() + sizeof(header), m_data, m_size);
 
 #ifndef DISPLAY_PIO
-    // As row scanning cannot run during flashing, turn off the display.
+    // As row scanning cannot run during flashing, turn off the display. When interrupts will be 
+    // restored, the brightness will be set back by the timer handler.
     Display *display = Display::instance();
-    int savedBrightness = 0;
     if (display != nullptr)
-    {
-        savedBrightness = display->brightness();
         display->setBrightness(0);
-    }
 #endif
 
     // Erase and program
@@ -147,12 +144,6 @@ int64_t Flash::write(alarm_id_t id, void *user_data)
     TRACE <<"Programming target region...";
     flash_range_program(FLASH_TARGET_OFFSET, dataCopy.data(), dataCopy.size());
     restore_interrupts(interrupts);
-
-#ifndef DISPLAY_PIO
-    // Turn on display again
-    if (display)
-        display->setBrightness(savedBrightness);
-#endif
 
     // Do not reschedule
     m_writeAlarm = -1;
