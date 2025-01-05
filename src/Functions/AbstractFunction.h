@@ -31,6 +31,8 @@ public:
     AbstractFunction(ClockUi *clockUi) : m_clockUi(clockUi)
     {}
 
+    void select(); // Select the function if it is in the current menu
+
     virtual void renderFrame(
         Bitmap &frame, int editedValueIndex, int blinkingCounter, bool fullRefresh) = 0;
     virtual bool isTimeFunction() const { return false; }
@@ -104,7 +106,6 @@ protected:
     void setCurrentMenu(
         std::vector<std::unique_ptr<AbstractFunction>> *menu, 
         AbstractFunction *function = nullptr);
-    void select(); // Select the function if it is in the current menu
     void selectLastUsedTimeFunction();
     Buzzer &buzzer();
 

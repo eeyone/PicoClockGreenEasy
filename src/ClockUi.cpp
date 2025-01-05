@@ -15,6 +15,7 @@
 #include "Functions/Stopwatch.h"
 #include "Functions/Submenu.h"
 #include "Functions/SyncInfo.h"
+#include "Functions/SyncNow.h"
 #include "Functions/SyncSource.h"
 #include "Functions/Temperature.h"
 #include "Functions/Time.h"
@@ -84,11 +85,9 @@ ClockUi::ClockUi() : m_clock(Display::FRAME_RATE, m_settings)
 
     TRACE << "Add functions of the Sync submenu";
     syncSubmenu->addFunction<SyncSource>(this);
-    // TODO: improve user feedback
-    syncSubmenu->addFunction<Action>(
-        this, uiText(TextId::SyncNow), std::bind(&Clock::syncNow, &m_clock));
+    SyncNow *syncNow = syncSubmenu->addFunction<SyncNow>(this);
     syncSubmenu->addFunction<SyncInfo>(this, SyncInfo::DailySyncTime);
-    syncSubmenu->addFunction<SyncInfo>(this, SyncInfo::LastSyncTimestamp);
+    syncNow->setNextFunction(syncSubmenu->addFunction<SyncInfo>(this, SyncInfo::LastSyncTimestamp));
     syncSubmenu->addFunction<SyncInfo>(this, SyncInfo::LastSyncDrift);
     syncSubmenu->addFunction<WifiStatus>(this);
 
