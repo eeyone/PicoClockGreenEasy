@@ -3,7 +3,7 @@ set(PICO_BOARD pico_w)
 
 # Enable/disable debug traces to stdio. Traces can be filtered by file in the 
 # isEnabledForFile method of src/Utils/Trace.cpp
-set(TRACE_TO_STDIO "1")
+set(TRACE_TO_STDIO "0")
 
 add_compile_definitions(
     WIFI_SSID=\"\"
@@ -14,5 +14,7 @@ add_compile_definitions(
     # Possible values: Europe, USA or Unknown (no automatic change)
     DST_LOCATION=Unknown
 
-    SIMULATE_BUTTONS_FROM_STDIO
+    # This can be enabled to simulate the three buttons using the standard input. Enter triggers SET
+    # and the arrow keys trigger UP and DOWN.
+    # SIMULATE_BUTTONS_FROM_STDIO
 )

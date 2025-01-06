@@ -25,6 +25,7 @@ This project is an easy-to-use firmware for the Waveshare Pico-Clock-Green writt
     - automatic daylight saving time observation (currently only for European Union and USA)
     - persistent saving of clock settings to flash memory
     - optional hourly chime activation using the ambient light sensor
+    - configurable date format: 5 formats with different orders and separators
     - configurable brightness: 
       - if auto light is disabled, the brightness can be set as a percentage
       - if auto light is enabled, the brightness can be defined at three ambient light points between which the firmware will interpolate: dark (no ambient light), dim (10% ambient light), max (maximum ambient light)

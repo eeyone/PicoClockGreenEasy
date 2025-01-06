@@ -50,6 +50,7 @@ add_executable( ${PROJECT_NAME}
 
 target_link_libraries(  ${PROJECT_NAME} 
                         pico_stdlib 
+                        pico_rand
                         hardware_i2c 
                         hardware_adc 
                         hardware_pwm)

@@ -46,8 +46,19 @@ inline bool Wifi::connectBlocking()
     return false;
 }
 
+inline bool Wifi::connectAsync()
+{
+    return false;
+}
+
 inline Wifi::Status Wifi::linkStatus()
 {
     return NotAvailable;
 }
+
+inline std::string Wifi::linkStatusToString(Status s)
+{
+    return "";
+}
+
 #endif
