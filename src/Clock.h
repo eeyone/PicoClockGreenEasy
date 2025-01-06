@@ -114,7 +114,7 @@ private:
     void setTmFromTime();
     void setFromRtcTime(tm tm);
     void logSync(Settings::SyncSource source, int driftMs);
-    void startRtcSync();
+    tm startRtcSync();
     void startNtpSync();
     void startGpsSync();
 

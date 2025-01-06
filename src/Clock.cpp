@@ -11,11 +11,10 @@ Clock::Clock(int tickPerSec, Settings &settings) :
 {
     // Initialize m_time and m_tm from the RTC. It will be used for displaying time 
     // while waiting for the sync from the RTC to be finished.
-    tm rtcTime;
-    if (m_rtc != nullptr && m_rtc->read(rtcTime))
+    if (m_rtc != nullptr)
     {
+        tm rtcTime = startRtcSync();
         setFromRtcTime(rtcTime);
-        startRtcSync();
     } else
     {
         TRACE << "No RTC available";
@@ -84,14 +83,17 @@ void Clock::syncNow()
     } 
 }
 
-void Clock::startRtcSync()
+tm Clock::startRtcSync()
 {
-    if (m_rtc)
+    tm rtcTime;
+    if (m_rtc && m_rtc->read(rtcTime))
     {
         TRACE << "Set m_lastRtcSec to be able to detect when the second changes in the RTC";
-        m_lastRtcSec = m_tm.tm_sec;
+        m_lastRtcSec = rtcTime.tm_sec;
         m_rtcSync = SyncingFromRtc;
-    }
+        return rtcTime;
+    } else
+        return {};
 }
 
 void Clock::startNtpSync()
@@ -124,7 +126,7 @@ void Clock::startGpsSync()
 
 void Clock::onExternalTimeReceived(time_t utcTime, uint32_t ms, Settings::SyncSource source)
 {
-    TRACE << "Received external UTC time:" << utcTime <<", setting it";
+    TRACE << "Received external UTC time:" << utcTime <<"." <<ms;
     time_t newTime = utcTime + UTC_OFFSET * 60 * 60;
     int drift = 
         (m_time * 1000 + m_tickCount * 1000 / m_tickCount.wrapValue() - newTime * 1000 - ms);
