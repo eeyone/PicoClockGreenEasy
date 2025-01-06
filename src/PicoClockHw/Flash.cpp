@@ -137,13 +137,14 @@ int64_t Flash::write(alarm_id_t id, void *user_data)
         display->setBrightness(0);
 #endif
 
-    // Erase and program
+    TRACE << "Erase and program";
     uint32_t interrupts = save_and_disable_interrupts();
     TRACE <<"Erasing target region...";
     flash_range_erase(FLASH_TARGET_OFFSET, FLASH_SECTOR_SIZE);
     TRACE <<"Programming target region...";
     flash_range_program(FLASH_TARGET_OFFSET, dataCopy.data(), dataCopy.size());
     restore_interrupts(interrupts);
+    TRACE << "done";
 
     // Do not reschedule
     m_writeAlarm = -1;

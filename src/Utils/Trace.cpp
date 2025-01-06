@@ -2,6 +2,7 @@
 #include "PicoClockHw/Platform.h"
 
 #include <time.h>
+#include <string.h>
 
 namespace {
 uint64_t g_lastTrace = 0;
@@ -9,14 +10,24 @@ uint64_t g_lastTrace = 0;
 bool isEnabledForFile(const std::string &file)
 {
     return 
-        file.find("Clock.cpp") != std::string::npos ||
-        file.find("main.cpp") != std::string::npos ||
-        file.find("Rtc.cpp") != std::string::npos;
+        file == "Clock.cpp" || 
+        file == "main.cpp" || 
+        file == "Gps.cpp" ||
+        file == "Flash.cpp";
 }
 } // namespace
 
-Trace::Trace(const char *file, int line) : m_enabled(isEnabledForFile(file))
+Trace::Trace(const char *filePath, int line) : m_enabled()
 {
+    // Remove the path before the file name to make output shorter.
+    const char *file = strrchr(filePath, '/');
+    if (file == nullptr)
+        file = filePath;
+    else
+        file++;
+
+    m_enabled = isEnabledForFile(file);
+
     if (!m_enabled)
         return;
     
