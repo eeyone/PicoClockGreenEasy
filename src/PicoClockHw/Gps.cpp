@@ -143,14 +143,19 @@ void Gps::onDateTime(const std::string &date, const std::string &time)
     if (date.size() < 6 || time.size() < 6)
         return;
 
-    tm dt;
-    dt.tm_sec = std::stoi(time.substr(4, 2));
+    tm dt = {};
+    float secWithMs = std::stof(time.substr(4));
+    dt.tm_sec = secWithMs;
+    int ms = secWithMs * 1000 - dt.tm_sec * 1000;
     dt.tm_min = std::stoi(time.substr(2, 2));
     dt.tm_hour = std::stoi(time.substr(0, 2));
     dt.tm_mday = std::stoi(date.substr(0, 2));
     dt.tm_mon = std::stoi(date.substr(2, 2)) - 1; // tm::tm_mon is 0-based.
     dt.tm_year = std::stoi(date.substr(4, 2)) + 100; // tm::tm_year is "years since 1900"
 
+    TRACE << "Received GPS date/time:" << dt;
+    TRACE << "ms:" << ms;
+
     if (m_timeCallback)
-        m_timeCallback(mktime(&dt), 0); // TODO: support fractional part of the seconds
+        m_timeCallback(mktime(&dt), ms);
 }
