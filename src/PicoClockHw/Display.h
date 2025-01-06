@@ -46,7 +46,7 @@ private:
     const uint32_t *m_frameBuffer;
     std::function<void(Display &)> m_frameCallback;
     mutable int m_ambientLight = 0;
-    mutable MovingAverage<256> m_ambientLightFilter {0};
+    mutable MovingAverage<256> m_ambientLightFilter {10};
 
 #ifdef DISPLAY_PIO
     void initSendPixelsPioStateMachine();
