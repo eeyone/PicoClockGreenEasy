@@ -17,8 +17,9 @@ public:
 
 private:
     float rawTemperature() const;
-
-    std::unique_ptr<MovingAverage<32>> m_tempFilter;
+    static float registersToTemp(uint8_t msb, uint8_t lsb);
+    
+    MovingAverage<64> m_tempFilter;
     uint64_t m_lastTempMeasurementUs;
 };
 

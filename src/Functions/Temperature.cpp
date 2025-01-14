@@ -29,10 +29,6 @@ void Temperature::renderFrame(Bitmap &frame, int editedValueIndex, int blinkingC
     if (!settings().useCelsius)
         temp = temp * 9 / 5 + 32;
 
-    char tempString[5];
-    sprintf(tempString, "%4.1f", temp);
-    TRACE <<SetAutoSpace(false) << "tempString: '" << tempString << "'";
-
     frame.clear();
     frame.setFont(&classicFont);
 
@@ -44,6 +40,10 @@ void Temperature::renderFrame(Bitmap &frame, int editedValueIndex, int blinkingC
         // Use the absolute value in the rest of the function
         temp = -temp; 
     }
+
+    char tempString[5];
+    sprintf(tempString, "%4.1f", temp);
+    TRACE <<SetAutoSpace(false) << "tempString: '" << tempString << "'";
 
     frame.drawChar(14, 0, tempString[3]);
     frame.putPixel(12, 6, true);

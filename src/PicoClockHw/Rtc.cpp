@@ -44,7 +44,7 @@ Rtc::Rtc()
     gpio_pull_up(SCL);
 
     TRACE << "Initialize the temperature filter";
-    m_tempFilter = std::make_unique<MovingAverage<32>>(rawTemperature());
+    m_tempFilter.reset(rawTemperature());
     m_lastTempMeasurementUs = time_us_64();
 }
 
@@ -119,14 +119,14 @@ float Rtc::temperature()
 {
     // As the measured temperature is often hesitating between two values separated by 0.25°, filter
     // using a moving average. This also provides a higher resulting precision.
-    float temp = m_tempFilter->get();
+    float temp = m_tempFilter.get();
     TRACE << "Temperature: " << temp;
 
     // Feed the moving average filter if there has been no measurement for at least half a second.
     if (time_us_64() >= m_lastTempMeasurementUs + 500000)
     {
         m_lastTempMeasurementUs = time_us_64();
-        m_tempFilter->put(rawTemperature());
+        m_tempFilter.put(rawTemperature());
     }
 
     return temp;
@@ -151,14 +151,15 @@ float Rtc::rawTemperature() const
         return NAN;
     }
 
-    // Calculate temperature as floating point number
-    float currentTemp = buffer[0];
-    float fractional = (buffer[1] >> 6) * 0.25;
-    if (currentTemp >= 0)
-        currentTemp += fractional;
-    else
-        currentTemp -= fractional;
-    TRACE << "Measured temperature:" <<std::fixed << std::setprecision(2) << currentTemp;
+    return registersToTemp(buffer[0], buffer[1]);
+}
 
+float Rtc::registersToTemp(uint8_t msb, uint8_t lsb)
+{
+    TRACE << "msb =" << std::hex << std::showbase<< (int)msb;
+    TRACE << "lsb =" << std::hex << std::showbase<< (int)lsb;
+
+    float currentTemp = static_cast<int8_t>(msb) + (lsb >> 6) * 0.25;
+    TRACE << "currentTemp =" <<std::fixed << std::setprecision(2) << currentTemp;
     return currentTemp;
 }
