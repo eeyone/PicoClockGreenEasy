@@ -36,6 +36,7 @@ Clock::Clock(int tickPerSec, Settings &settings) :
         std::bind(&Clock::onExternalTimeReceived, this, _1, _2, Settings::SyncSource::Gps));
     m_gps.setTimeoutCallback([this]()
                              { 
+            TRACE <<"Timeout callback";
             m_gps.setEnabled(false);
             m_extSync = Inactive; });
 
@@ -141,8 +142,11 @@ void Clock::onExternalTimeReceived(time_t utcTime, uint32_t ms, Settings::SyncSo
     // Now that we got the time from outside, plan RTC sync at the next second change.
     m_rtcSync = SyncingToRtc;
 
-    // Disable GPS as it is no longer needed, in case the clock was synchronized from it.
-    m_gps.setEnabled(false);
+    if (source == Settings::SyncSource::Gps)
+    {
+        // Disable GPS as it is no longer needed
+        m_gps.setEnabled(false);
+    }
 }
 
 void Clock::tick(bool &clockAdjusted, Settings::AlarmMode &reachedAlarmMode)

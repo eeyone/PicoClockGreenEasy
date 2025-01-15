@@ -33,5 +33,12 @@ struct Trampoline <Return (Class::*)(Param... param)>
     {
         auto self = static_cast<Class *>(rt->user_data);
         return (self->*methodPtr)();
-    }    
+    }
+
+    // To use if there is no user pointer, with a static instance() method in the class
+    template <Return (Class::*methodPtr)(Param...)>
+    static Return singleton(Param... params)
+    {
+        return (Class::instance()->*methodPtr)(params...);
+    }
 };
