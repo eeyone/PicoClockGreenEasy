@@ -7,7 +7,12 @@ template <size_t size>
 class MovingAverage
 {
 public:
-    MovingAverage(float initValue)
+    MovingAverage(float initValue = 0)
+    {
+        reset(initValue);
+    }
+
+    void reset(float initValue)
     {
         for (int i = 0; i < size; i++)
             m_ringBuffer[i] = initValue;
