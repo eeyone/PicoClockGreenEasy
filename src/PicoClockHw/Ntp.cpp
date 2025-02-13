@@ -45,8 +45,7 @@ Ntp::~Ntp()
 void Ntp::startRequest()
 {
     // Set alarm in case udp requests are lost
-    MAKE_TRAMPOLINE(Ntp, onNtpFailed, userPtrAtEnd);
-    m_timeoutAlarm = add_alarm_in_ms(NTP_TIMEOUT_MS, onNtpFailed, this, true);
+    m_timeoutAlarm.startSingleShot(NTP_TIMEOUT_MS, std::bind(&Ntp::onNtpFailed, this));
 
     // Get server address from DNS
     // Note: cyw43_arch_lwip_begin/end should be used around calls into lwIP to ensure correct locking.
@@ -138,22 +137,14 @@ void Ntp::onMsgReceived(struct udp_pcb *pcb, struct pbuf *p, const ip_addr_t *ad
     }
     pbuf_free(p);
 
-    if (m_timeoutAlarm != -1) 
-    {
-        cancel_alarm(m_timeoutAlarm);
-        m_timeoutAlarm = -1;
-    }
+    m_timeoutAlarm.stop();
 }
 
-// Callback for add_alarm_in_ms
-int64_t Ntp::onNtpFailed(alarm_id_t id)
+void Ntp::onNtpFailed()
 {
-    m_timeoutAlarm = -1;
     TRACE <<"ntp request failed";
     m_state = Timeout;
     
     if (m_failCallback)
         m_failCallback(Timeout);
-    
-    return 0;
 }

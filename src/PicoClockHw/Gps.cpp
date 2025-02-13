@@ -103,32 +103,23 @@ void Gps::setEnabled(bool enabled)
 #endif
 
         TRACE << "Stop timer";
-        if (m_timeoutAlarm != -1)
-        {
-            cancel_alarm(m_timeoutAlarm);
-            m_timeoutAlarm = -1;
-            TRACE << "Time stopped";
-        }
+        m_timeoutAlarm.stop();
     }
 }
 
 void Gps::resetTimeoutAlarm()
 {
-    if (m_timeoutAlarm != -1)
-        cancel_alarm(m_timeoutAlarm);
+    m_timeoutAlarm.stop();
 
     if (m_enabled)
     {
-        MAKE_TRAMPOLINE(Gps, onTimeout, userPtrAtEnd);
-        m_timeoutAlarm = add_alarm_in_ms(TIMEOUT_MS, onTimeout, this, true);
+        m_timeoutAlarm.startSingleShot(TIMEOUT_MS, std::bind(&Gps::onTimeout, this));
     }
 }
 
-int64_t Gps::onTimeout(alarm_id_t)
+void Gps::onTimeout()
 {
-    m_timeoutAlarm = -1;
     m_timeoutCallback();
-    return 0; // Do not reschedule
 }
 
 void Gps::onUartRx()

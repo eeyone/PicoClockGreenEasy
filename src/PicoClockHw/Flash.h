@@ -1,8 +1,8 @@
 #pragma once
 
+#include "Timer.h"
 #include <cstdint>
 #include <cstddef>
-#include <pico/time.h>
 
 class Flash
 {
@@ -19,9 +19,9 @@ public:
     static void scheduleWrite();
 
 private:
-    static int64_t write(alarm_id_t id, void *user_data);
+    static void write();
 
     static uint8_t *m_data;
     static size_t m_size;
-    static alarm_id_t m_writeAlarm;
+    static Timer m_writeAlarm;
 };

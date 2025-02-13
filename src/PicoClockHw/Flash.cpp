@@ -45,7 +45,7 @@ namespace
 
 uint8_t *Flash::m_data = nullptr;
 size_t Flash::m_size = 0;
-alarm_id_t Flash::m_writeAlarm = -1;
+Timer Flash::m_writeAlarm;
 
 bool Flash::attach(uint8_t *data, size_t size)
 {
@@ -99,22 +99,18 @@ void Flash::scheduleWrite()
     TRACE << "Data size:" << m_size;
     if (m_data)
     {
-        if (m_writeAlarm != -1)
-            cancel_alarm(m_writeAlarm);
-
-        m_writeAlarm = add_alarm_in_ms(WRITE_DELAY_MS, &Flash::write, nullptr, false);
+        m_writeAlarm.startSingleShot(WRITE_DELAY_MS, &Flash::write);
     } else
         TRACE << "No data attached";
 }
 
-int64_t Flash::write(alarm_id_t id, void *user_data)
+void Flash::write()
 {
     if (m_size == reinterpret_cast<const Header *>(g_flashTargetContent)->dataSize &&
         memcmp(m_data, g_flashTargetContent + sizeof(Header), m_size) == 0)
     {
         TRACE << "Data did not change, no need to flash.";
-        m_writeAlarm = -1;
-        return 0;        
+        return;
     }
 
     // Prepare header
@@ -145,8 +141,4 @@ int64_t Flash::write(alarm_id_t id, void *user_data)
     flash_range_program(FLASH_TARGET_OFFSET, dataCopy.data(), dataCopy.size());
     restore_interrupts(interrupts);
     TRACE << "done";
-
-    // Do not reschedule
-    m_writeAlarm = -1;
-    return 0;
 }

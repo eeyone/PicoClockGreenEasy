@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Timer.h"
 #include <pico/time.h>
 #include <string>
 #include <vector>
@@ -33,14 +34,14 @@ private:
     void setNmeaMessageEnabled(const std::string &msgId, bool enabled);
     void onDateTime(const std::string &date, const std::string &time);
     void resetTimeoutAlarm();
-    int64_t onTimeout(alarm_id_t);
+    void onTimeout();
 
     static Gps *m_instance;
     bool m_enabled = false;
     std::string g_receiveBuffer; // Not printable if the message is an UBX one
     std::function<void(time_t utcTime, uint32_t ms)> m_timeCallback;
     std::function<void()> m_timeoutCallback;
-    alarm_id_t m_timeoutAlarm = -1;
+    Timer m_timeoutAlarm;
     bool m_receivingUbxMsg = false;
     size_t m_ubxMsgSize = 0;
 };

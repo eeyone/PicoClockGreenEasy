@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Timer.h"
 #include <map>
 #include <functional>
 #include <cstdint>
@@ -16,8 +17,8 @@ public:
 
 private:
     static void dispatcher(unsigned int gpio, uint32_t events);
-    int64_t debounceCallback(alarm_id_t id);
-    int64_t repeatCallback(alarm_id_t id);
+    void onDebounce();
+    Timer::Rescheduling onRepeat();
 
     unsigned int m_gpio;
     static std::map<unsigned int, Button *> m_buttonByGpio;
@@ -26,6 +27,6 @@ private:
     std::function<void()> m_repeatCallback;
 
     int m_repeatDelay = 0;
-    alarm_id_t m_repeatAlarm = -1;
-    alarm_id_t m_debounceAlarm = -1;
+    Timer m_repeatAlarm;
+    Timer m_debounceAlarm;
 };

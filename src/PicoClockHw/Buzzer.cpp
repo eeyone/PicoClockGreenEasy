@@ -10,28 +10,13 @@ Buzzer::Buzzer()
     gpio_set_dir(BUZZ, GPIO_OUT);
 }
 
-Buzzer::~Buzzer()
-{
-    if (m_stopBeepAlarm != -1)
-        cancel_alarm(m_stopBeepAlarm);
-}
-
 void Buzzer::beepForMs(int delay)
 {
     gpio_put(BUZZ, true);
-
-    if (m_stopBeepAlarm != -1)
-        cancel_alarm(m_stopBeepAlarm);
-
-    MAKE_TRAMPOLINE(Buzzer, stopBeep, userPtrAtEnd);
-    m_stopBeepAlarm = add_alarm_in_ms(delay, stopBeep, this, true /* fire if past*/);
+    m_stopBeepAlarm.startSingleShot(delay, std::bind(&Buzzer::stopBeep, this));
 }
 
-int64_t Buzzer::stopBeep(alarm_id_t id)
+void Buzzer::stopBeep()
 {
     gpio_put(BUZZ, false);
-
-    m_stopBeepAlarm = -1;
-    
-    return 0; // Do not reschedule
 }

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Timer.h"
+
 #ifdef PICO_CYW43_SUPPORTED
 #include <lwip/dns.h>
 #endif
@@ -46,14 +48,14 @@ public:
 
 private:
 #ifdef PICO_CYW43_SUPPORTED
-    int64_t onNtpFailed(alarm_id_t id);
+    void onNtpFailed();
     void onNtpDnsFound(const char *hostname, const ip_addr_t *ipaddr);
     void sendNtpRequest();
     void onMsgReceived(struct udp_pcb *pcb, struct pbuf *p, const ip_addr_t *addr, u16_t port);
 
     ip_addr_t m_serverAddress;
     udp_pcb *m_pcb = nullptr; // protocol control block
-    alarm_id_t m_timeoutAlarm = -1;
+    Timer m_timeoutAlarm;
     std::function<void(time_t utcTime, uint32_t ms)> m_timeCallback;
     std::function<void(State reason)> m_failCallback;
 #endif

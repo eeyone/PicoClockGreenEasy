@@ -23,9 +23,6 @@ Button::Button(unsigned int gpio) : m_gpio(gpio)
 Button::~Button()
 {
     m_buttonByGpio.erase(m_gpio);
-    
-    cancel_alarm(m_repeatAlarm);
-    cancel_alarm(m_debounceAlarm);
 }
 
 void Button::setPressedCallback(std::function<void()> f)
@@ -49,18 +46,11 @@ void Button::dispatcher(unsigned int gpio, uint32_t events)
     Button &obj = *it->second;
 
     // To debounce, delay the actual processing using an alarm.
-    if (obj.m_debounceAlarm != -1) // Note: calling cancel_alarm with -1 would crash
-    {
-        TRACE << "Cancel alarm " << obj.m_debounceAlarm;
-        cancel_alarm(obj.m_debounceAlarm);
-    }
-    MAKE_TRAMPOLINE(Button, debounceCallback, userPtrAtEnd);
-    obj.m_debounceAlarm = 
-        add_alarm_in_ms(DEBOUNCE_DELAY_MS, debounceCallback, &obj, true /* fire if past*/);
-    TRACE <<"End of dispatcher\n";
+    obj.m_debounceAlarm.startSingleShot(DEBOUNCE_DELAY_MS, std::bind(&Button::onDebounce, &obj));
+    TRACE <<"End of dispatcher";
 }
 
-int64_t Button::debounceCallback(alarm_id_t id)
+void Button::onDebounce()
 {
     if (!gpio_get(m_gpio))
     {
@@ -71,40 +61,27 @@ int64_t Button::debounceCallback(alarm_id_t id)
         // If a repeat callback is installed, start an alarm for it
         if (m_repeatCallback)
         {
-            TRACE << "Current repeat alarm: " << m_repeatAlarm;
-            MAKE_TRAMPOLINE(Button, repeatCallback, userPtrAtEnd)
-            m_repeatAlarm = add_alarm_in_ms(m_repeatDelay, repeatCallback, this, false);
+            TRACE << "Start repeat alarm";
+            m_repeatAlarm.startRepeatable(m_repeatDelay, std::bind(&Button::onRepeat, this));
         }
     } else
     { 
         // Button released. Cancel the repetition alarm.
-        TRACE << "Repeat alarm to cancel: " << m_repeatAlarm;
-        if (m_repeatAlarm != -1)
-        {
-            bool ok = cancel_alarm(m_repeatAlarm);
-            TRACE <<"Result of cancel_alarm: "<<ok;
-        }
-        m_repeatAlarm = -1;
+        TRACE << "Cancel repeat alarm";
+        m_repeatAlarm.stop();
     }
-
-    // Do not reschedule
-    m_debounceAlarm = -1;
-    return 0; 
 }
 
-int64_t Button::repeatCallback(alarm_id_t id)
+Timer::Rescheduling Button::onRepeat()
 {
     if (gpio_get(m_gpio))
     { 
         // Button not pressed anymore. Do not reschedule the alarm
         TRACE << "Not rescheduled\n";
-        return 0;
+        return Timer::Stop;
     } else
     {
         m_repeatCallback();
-
-        // Reschedule the same alarm this many us from the time the alarm was previously 
-        // scheduled to fire
-        return -m_repeatDelay * 1000;
+        return Timer::RescheduleFromPreviousCall;
     }
 }

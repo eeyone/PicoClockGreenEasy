@@ -11,8 +11,8 @@ bool isEnabledForFile(const std::string &file)
 {
     return 
         file == "Clock.cpp" || 
-        file == "main.cpp" || 
-        file == "Gps.cpp" ||
+        file == "Timer.cpp" || 
+        file == "Button.cpp" ||
         file == "Flash.cpp";
 }
 } // namespace
