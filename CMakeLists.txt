@@ -1,4 +1,11 @@
-include (UserConfig.cmake)
+# Include the user configuration. The UserConfig.cmake at the root of the repo can be overriden by 
+# another UserConfig.cmake file one directory upper (outside of the repo to avoid having to modify 
+# it).
+if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/../UserConfig.cmake)
+        include (../UserConfig.cmake)
+else()
+        include (UserConfig.cmake)
+endif()
 
 cmake_minimum_required(VERSION 3.13)
 
