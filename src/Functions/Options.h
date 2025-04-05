@@ -35,13 +35,18 @@ private:
     int valueCount() const override;
     void modifyValue(int valueIndex, Direction direction) override;
 
-    bool allowsBrightnessBoost(int valueIndex) const override
+    BrightnessHandling brightnessHandling(int valueIndex) const override
     {
         // Disable "brightness boost" when setting brightness so that the user can see the actual 
         // brightness that results from the setting.
-        return 
-            valueIndex != EditingBrightnessDark && 
+        if (valueIndex != EditingBrightnessDark && 
             valueIndex != EditingBrightnessDim && 
-            valueIndex != EditingBrightnessBright;
+            valueIndex != EditingBrightnessBright)
+        {
+            return WithBoost;
+        } else
+        {
+            return WithoutBoost;
+        }
     }
 };

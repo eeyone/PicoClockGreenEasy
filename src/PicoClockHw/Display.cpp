@@ -139,8 +139,8 @@ void Display::initSelectRowsPioStateMachine()
     pio_sm_set_consecutive_pindirs(g_pio, m_selectRowsSm, A2, 1, true);
     
     // Prepare state machine configuration
-    uint offset = pio_add_program(g_pio, &select_rows_program);
-    pio_sm_config c = select_rows_program_get_default_config(offset);
+    m_selectRowsProgramOffset = pio_add_program(g_pio, &select_rows_program);
+    pio_sm_config c = select_rows_program_get_default_config(m_selectRowsProgramOffset);
 
     // Assign "set pins" to A0 and A1, with the ignored pin 17 in between
     sm_config_set_set_pins(&c, A0, 3);
@@ -149,7 +149,7 @@ void Display::initSelectRowsPioStateMachine()
     sm_config_set_sideset_pins(&c, A2);
 
     // Init SM
-    pio_sm_init(g_pio, m_selectRowsSm, offset, &c);
+    pio_sm_init(g_pio, m_selectRowsSm, m_selectRowsProgramOffset, &c);
 }
 
 void Display::initDma()
@@ -205,6 +205,63 @@ void Display::initDma()
     // Now that everything is ready, start the continuous transfer. The led matrix controller is fully
     // driven by DMA and PIO, so that the CPU does not have to handle anything for it.
     dma_channel_start(m_dataChannel);
+}
+
+void Display::setFlashlightMode(bool flashlightMode)
+{
+    if (flashlightMode)
+    {
+        if (m_flashlightMode)
+            return; // Already in flashlight mode
+
+        // Disable the channel chaining by setting it to itself, so that it won't restart when
+        // aborting the data channel.
+        dma_channel_config cfg = dma_get_channel_config(m_dataChannel);
+        channel_config_set_chain_to(&cfg, m_dataChannel);
+        dma_channel_set_config(m_dataChannel, &cfg, false);
+
+        TRACE << "Stop display scanning by stoppping the DMA";
+        dma_channel_abort(m_dataChannel);
+
+        // Since the DMA timer is no longer called, use an alternative timer instead.
+        m_flashlightModeTimer.startRepeatable(1000 / FRAME_RATE, []()
+            { 
+                if (m_instance->m_frameCallback)
+                    m_instance->m_frameCallback(*m_instance);
+                return Timer::RescheduleFromPreviousCall; 
+            });
+
+        // Enable only white leds on the left side
+        pio_sm_put(g_pio, m_sendPixelsSm, (1 << 29) | (1 << 26));
+
+        // Stop the state machine that selects the rows and stay on row 0, which is the one white 
+        // leds are connected to
+        pio_sm_set_enabled(g_pio, m_selectRowsSm, false);
+        pio_sm_set_pins(g_pio, m_selectRowsSm, 0);
+    } else
+    {
+        if (!m_flashlightMode)
+            return; // Already in normal mode
+
+        // Set brightness to zero to avoid a glitch when switching back to the display.
+        Display::instance()->setBrightness(0);
+
+        // Restart the state machine that selects the rows and jump to the second instruction so
+        // that rows are aligned correctly (not sure why it needs to be the second instruction)
+        pio_sm_set_enabled(g_pio, m_selectRowsSm, true);
+        pio_sm_exec(g_pio, m_selectRowsSm, pio_encode_jmp(m_selectRowsProgramOffset + 1));
+
+        // Restore the channel chaining.
+        dma_channel_config cfg = dma_get_channel_config(m_dataChannel);
+        channel_config_set_chain_to(&cfg, m_ctrlChannel);
+        dma_channel_set_config(m_dataChannel, &cfg, false);
+
+        // Stop the alternative timer and restart the DMA transfer.
+        m_flashlightModeTimer.stop();
+        dma_channel_start(m_dataChannel);
+    }
+
+    m_flashlightMode = flashlightMode;
 }
 
 void Display::onDmaTransferredFrame()
@@ -266,7 +323,7 @@ void Display::setBrightness(float percent)
     if (percent > 100)
         percent = 100;
 
-    TRACE << "Set brightness to" << percent << "%";
+//    TRACE << "Set brightness to" << percent << "%";
 
     // OE is active low, so reverse the percentage.
     // Also set a level of at least 1 so that the display does not completely turn off.

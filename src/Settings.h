@@ -79,6 +79,7 @@ public:
         int brightnessBright = 100;
         DateFormat dateFormat = DateFormat::MonthDashDay;
         SyncSource syncSource = SyncSource::Rtc;
+        int flashlightBrightness = 50;
     };
 
     Settings();

@@ -28,6 +28,13 @@ public:
         RepeatedDown
     };
 
+    enum BrightnessHandling
+    {
+        WithBoost,
+        WithoutBoost,
+        NoBrightnessHandling
+    };
+
     AbstractFunction(ClockUi *clockUi) : m_clockUi(clockUi)
     {}
 
@@ -58,9 +65,9 @@ public:
     virtual void modifyValue(int valueIndex, Direction direction) {}
     virtual void finishEditing() {}
 
-    virtual bool allowsBrightnessBoost(int valueIndex) const
+    virtual BrightnessHandling brightnessHandling(int valueIndex) const
     {
-        return true;
+        return WithBoost;
     }
 
 protected:

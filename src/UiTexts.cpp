@@ -5,6 +5,8 @@ namespace
     const char *g_textTable[static_cast<unsigned int>(TextId::TextCount)] =
         {
             "Alarms",
+            "Tools",
+            "Clock sync",
             "Options",
             "Exit",
 
@@ -43,6 +45,7 @@ namespace
             "Off",
             "Day",
 
+            "Flashlight",
             "Stopwatch",
             "Reset",
             "Countdown",
@@ -54,7 +57,6 @@ namespace
             "DD/MM",
             "DD.MM",
 
-            "Clock sync",
             "Source: ",
             "Sync now",
             "Daily sync time: ",

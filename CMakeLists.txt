@@ -35,6 +35,7 @@ add_executable( ${PROJECT_NAME}
                 src/Functions/AlarmSubmenu.cpp
                 src/Functions/Countdown.cpp
                 src/Functions/Date.cpp
+                src/Functions/Flashlight.cpp
                 src/Functions/Options.cpp            
                 src/Functions/SkipNextAlarm.cpp
                 src/Functions/Stopwatch.cpp

@@ -10,6 +10,7 @@
 #include "Functions/AlarmSubmenu.h"
 #include "Functions/Countdown.h"
 #include "Functions/Date.h"
+#include "Functions/Flashlight.h"
 #include "Functions/Options.h"
 #include "Functions/SkipNextAlarm.h"
 #include "Functions/Stopwatch.h"
@@ -60,10 +61,8 @@ ClockUi::ClockUi() : m_clock(Display::FRAME_RATE, m_settings)
     m_temperatureFuncIdx = addFunction<Temperature>();
     Submenu *alarmSubmenu =
         addFunctionAndReturnPtr<AlarmSubmenu>(&m_rootMenu);
-    Submenu *countdownSubmenu = 
-        addFunctionAndReturnPtr<Submenu>(uiText(TextId::Countdown), &m_rootMenu);
-    Submenu *stopwatchSubmenu = 
-        addFunctionAndReturnPtr<Submenu>(uiText(TextId::Stopwatch), &m_rootMenu);
+    Submenu *toolsSubmenu =
+        addFunctionAndReturnPtr<Submenu>(uiText(TextId::Tools), &m_rootMenu);
     Submenu *syncSubmenu = 
         addFunctionAndReturnPtr<Submenu>(uiText(TextId::Sync), &m_rootMenu);
     addFunction<Options>();
@@ -72,6 +71,13 @@ ClockUi::ClockUi() : m_clock(Display::FRAME_RATE, m_settings)
     alarmSubmenu->addFunction<SkipNextAlarm>(this);
     alarmSubmenu->addFunction<Alarm>(this, Alarm::Alarm1);
     alarmSubmenu->addFunction<Alarm>(this, Alarm::Alarm2);
+
+    TRACE <<"Add functions of the tools submenu";
+    toolsSubmenu->addFunction<Flashlight>(this);
+    Submenu *countdownSubmenu = 
+        toolsSubmenu->addFunction<Submenu>(this, uiText(TextId::Countdown), toolsSubmenu->menu());
+    Submenu *stopwatchSubmenu = 
+        toolsSubmenu->addFunction<Submenu>(this, uiText(TextId::Stopwatch), toolsSubmenu->menu());
 
     TRACE << "Add functions of the countdown submenu";
     m_countdownFunc = countdownSubmenu->addFunction<Countdown>(this, countdownSubmenu->menu());
@@ -389,6 +395,10 @@ bool ClockUi::hourlyChimeActive() const
 
 void ClockUi::adjustBrightness()
 {
+    if (m_currentMenu->at(m_curFuncIdx)->brightnessHandling(m_editedValueIndex) == 
+        AbstractFunction::NoBrightnessHandling)
+        return;
+
     float ambientLight = m_display.ambientLight();
 
     m_dayLight = ambientLight >= DIM_AMBIENT_LIGHT;
@@ -409,7 +419,7 @@ void ClockUi::adjustBrightness()
 
             if (
                 m_secondsWithoutUserInput < BRIGHTNESS_BOOST_AFTER_USER_INPUT_FOR_SEC &&
-                m_currentMenu->at(m_curFuncIdx)->allowsBrightnessBoost(m_editedValueIndex))
+                m_currentMenu->at(m_curFuncIdx)->brightnessHandling(m_editedValueIndex) == AbstractFunction::WithBoost)
             {
                 // Temporarily increase brightness after user input
                 brightness = 

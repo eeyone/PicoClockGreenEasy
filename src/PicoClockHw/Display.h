@@ -2,6 +2,7 @@
 
 #include "Utils/CyclicCounter.h"
 #include "Utils/MovingAverage.h"
+#include "Timer.h"
 
 #include <functional>
 #include <pico/time.h>
@@ -40,6 +41,11 @@ public:
     float ambientLight() const; 
     
     void setBrightness(float percent);
+    
+    // If enabled, turn the display off and turn on white leds on the left side of the device.
+    // setBrightness then allows to set the brightness of the flashlight. When leaving the 
+    // flashlight mode, the brightness is set to zero.
+    void setFlashlightMode(bool lightMode);
 
 private:
     static Display *m_instance;
@@ -47,6 +53,8 @@ private:
     std::function<void(Display &)> m_frameCallback;
     mutable int m_ambientLight = 0;
     mutable MovingAverage<256> m_ambientLightFilter {10};
+    bool m_flashlightMode = false; // TODO: support !DISPLAY_PIO mode or remove it
+    Timer m_flashlightModeTimer;
 
 #ifdef DISPLAY_PIO
     void initSendPixelsPioStateMachine();
@@ -55,6 +63,7 @@ private:
     static void onDmaTransferredFrame();
 
     uint m_sendPixelsSm = 0, m_selectRowsSm = 0;
+    uint m_selectRowsProgramOffset = 0;
     int m_dataChannel = -1;
     int m_ctrlChannel = -1;
 #else

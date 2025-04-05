@@ -4,8 +4,10 @@
 
 enum class TextId
 {
-    // For menus
+    // Main menu
     Alarms = 0,
+    Tools,
+    Sync,
     Options,
     Exit,
 
@@ -47,7 +49,8 @@ enum class TextId
     Off,
     Day,
 
-    // Stopwatch and countdown
+    // Tools menu, stopwatch and countdown
+    Flashlight,
     Stopwatch,
     Reset,
     Countdown,
@@ -61,7 +64,6 @@ enum class TextId
     DayDotMonth,
 
     // Sync menu
-    Sync,
     SourceColon,
     SyncNow,
     DailySyncTimeColon,

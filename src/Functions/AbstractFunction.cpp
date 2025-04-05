@@ -153,6 +153,13 @@ void AbstractFunction::renderScrollingText(
 void AbstractFunction::setCurrentMenu(
     std::vector<std::unique_ptr<AbstractFunction>> *menu, AbstractFunction *function /* = nullptr */)
 {
+    // Stop editing in the current function if something was being edited.
+    if (m_clockUi->m_editedValueIndex != 0)
+    {
+        m_clockUi->m_currentMenu->at(m_clockUi->m_curFuncIdx)->finishEditing();
+        m_clockUi->m_editedValueIndex = 0;
+    }
+
     m_clockUi->m_currentMenu = menu;
     m_clockUi->m_forceRefresh = true;
     m_clockUi->initHorizScrolling();
