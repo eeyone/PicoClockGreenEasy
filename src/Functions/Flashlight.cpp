@@ -16,8 +16,8 @@ void Flashlight::startEditingValue(int valueIndex)
     if (valueIndex == 1)
     {
         // Turn on the flashlight (which turns off the display) and set its brightness.
-        Display::instance()->setFlashlightMode(true);
-        Display::instance()->setBrightness(settings().flashlightBrightness);
+        display().setFlashlightMode(true);
+        display().setBrightness(settings().flashlightBrightness);
     }
 }
 
@@ -33,11 +33,11 @@ void Flashlight::modifyValue(int valueIndex, Direction direction)
         brightness = std::max(brightness - 10, 10);
     }
 
-    Display::instance()->setBrightness(brightness);
+    display().setBrightness(brightness);
 }
 
 void Flashlight::finishEditing()
 {
     // Turn off the flashlight and turn on the display
-    Display::instance()->setFlashlightMode(false);
+    display().setFlashlightMode(false);
 }

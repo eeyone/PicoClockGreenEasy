@@ -8,26 +8,22 @@
 #include <hardware/pwm.h>
 #include <iostream>
 
-#ifdef DISPLAY_PIO
 #include <hardware/pio.h>
 #include <hardware/clocks.h>
 #include <hardware/dma.h>
 
 #include "Display.pio.h"
-#endif
 
 namespace 
 {
     const int AMBIENT_LIGHT_HYSTERESIS = 1;
     const int PWM_WRAP = 1000;
-#ifdef DISPLAY_PIO
     PIO g_pio = pio0;
-#endif
 }
 
 Display *Display::m_instance = nullptr;
 
-Display::Display(const uint32_t *frameBuffer, std::function<void(Display &)> frameCallback) 
+Display::Display(const uint32_t *frameBuffer, std::function<void()> frameCallback) 
     : m_frameBuffer(frameBuffer), m_frameCallback(frameCallback) 
 {
     TRACE << "Display constructor";
@@ -68,7 +64,6 @@ Display::Display(const uint32_t *frameBuffer, std::function<void(Display &)> fra
 
     m_instance = this;
 
-#ifdef DISPLAY_PIO
     initSendPixelsPioStateMachine();
     initSelectRowsPioStateMachine();
 
@@ -76,10 +71,6 @@ Display::Display(const uint32_t *frameBuffer, std::function<void(Display &)> fra
     pio_set_sm_mask_enabled(g_pio, (1<<m_sendPixelsSm) | (1<<m_selectRowsSm), true);
 
     initDma();
-#else
-    MAKE_TRAMPOLINE(Display, rowScan, repeating_timer_t)
-    add_repeating_timer_ms(-1, rowScan, this, &m_timer);
-#endif
 
     TRACE << "Display constructor done";
 }
@@ -88,7 +79,6 @@ Display::~Display()
 {
     m_instance = nullptr;
 
-#ifdef DISPLAY_PIO
     // Stop DMA and unclaim channels
     dma_channel_abort(m_dataChannel);
     dma_channel_abort(m_ctrlChannel);
@@ -100,12 +90,8 @@ Display::~Display()
     pio_set_sm_mask_enabled(g_pio, (1<<m_sendPixelsSm) | (1<<m_selectRowsSm), false);
     pio_sm_unclaim(g_pio, m_sendPixelsSm);
     pio_sm_unclaim(g_pio, m_selectRowsSm);
-#else
-    cancel_repeating_timer(&m_timer);
-#endif
 }
 
-#ifdef DISPLAY_PIO
 void Display::initSendPixelsPioStateMachine()
 {
     // Claim state machine and configure GPIOs
@@ -227,7 +213,7 @@ void Display::setFlashlightMode(bool flashlightMode)
         m_flashlightModeTimer.startRepeatable(1000 / FRAME_RATE, []()
             { 
                 if (m_instance->m_frameCallback)
-                    m_instance->m_frameCallback(*m_instance);
+                    m_instance->m_frameCallback();
                 return Timer::RescheduleFromPreviousCall; 
             });
 
@@ -244,7 +230,7 @@ void Display::setFlashlightMode(bool flashlightMode)
             return; // Already in normal mode
 
         // Set brightness to zero to avoid a glitch when switching back to the display.
-        Display::instance()->setBrightness(0);
+        setBrightness(0);
 
         // Restart the state machine that selects the rows and jump to the second instruction so
         // that rows are aligned correctly (not sure why it needs to be the second instruction)
@@ -267,45 +253,11 @@ void Display::setFlashlightMode(bool flashlightMode)
 void Display::onDmaTransferredFrame()
 {
     if (m_instance->m_frameCallback)
-        m_instance->m_frameCallback(*m_instance);
+        m_instance->m_frameCallback();
 
     // Clear the interrupt request.
     dma_hw->ints0 = 1u << m_instance->m_dataChannel;
 }
-
-#else // DISPLAY_PIO
-
-bool Display::rowScan()
-{
-    // Send all pixels for the current row.
-    uint32_t rowBits = m_frameBuffer[m_currentRow];
-    for (int i = 0; i < 32; i++)
-    {
-        gpio_put(CLK, false);
-        gpio_put(SDI, rowBits & (1<<31));
-        rowBits <<= 1;
-        gpio_put(CLK, true);
-    }
-    
-    // Latch to the matrix controler
-    gpio_put(LE, true);
-    gpio_put(LE, false);
-
-    // Select row
-    gpio_put(A0, m_currentRow & 1);
-    gpio_put(A1, m_currentRow & 2);
-    gpio_put(A2, m_currentRow & 4);
-
-    // Update row counter
-    if (m_currentRow.increment())
-    {
-        if (m_frameCallback)
-            m_frameCallback(*this);
-    }
-
-    return true; // to continue repeating
-}
-#endif // DISPLAY_PIO
 
 float Display::ambientLight() const
 {

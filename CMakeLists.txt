@@ -18,8 +18,6 @@ project(PicoClockGreenEasy)
 # initialize the Raspberry Pi Pico SDK
 pico_sdk_init()
 
-set(DISPLAY_PIO "1") # Enable use of DMA and PIO for the display
-
 add_executable( ${PROJECT_NAME}
                 src/Bitmap.cpp
                 src/Clock.cpp
@@ -62,18 +60,16 @@ target_link_libraries(  ${PROJECT_NAME}
                         pico_rand
                         hardware_i2c 
                         hardware_adc 
-                        hardware_pwm)
+                        hardware_pwm 
+                        hardware_dma 
+                        hardware_pio)
 
 if (TRACE_TO_STDIO)
         add_compile_definitions(TRACE_TO_STDIO)
         target_sources(${PROJECT_NAME} PRIVATE src/Utils/Trace.cpp)
 endif()
 
-if (DISPLAY_PIO)
-        add_compile_definitions(DISPLAY_PIO)
-        pico_generate_pio_header(${PROJECT_NAME} ${CMAKE_CURRENT_LIST_DIR}/src/PicoClockHw/Display.pio)
-        target_link_libraries(${PROJECT_NAME} hardware_dma hardware_pio)
-endif()
+pico_generate_pio_header(${PROJECT_NAME} ${CMAKE_CURRENT_LIST_DIR}/src/PicoClockHw/Display.pio)
 
 if (PICO_CYW43_SUPPORTED) # set by the pico_w.cmake file of the Pico SDK when PICO_BOARD=pico_w
         target_compile_definitions(${PROJECT_NAME} PRIVATE PICO_CYW43_SUPPORTED)

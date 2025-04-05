@@ -125,14 +125,6 @@ void Flash::write()
     memcpy(dataCopy.data(), &header, sizeof(header));
     memcpy(dataCopy.data() + sizeof(header), m_data, m_size);
 
-#ifndef DISPLAY_PIO
-    // As row scanning cannot run during flashing, turn off the display. When interrupts will be 
-    // restored, the brightness will be set back by the timer handler.
-    Display *display = Display::instance();
-    if (display != nullptr)
-        display->setBrightness(0);
-#endif
-
     TRACE << "Erase and program";
     uint32_t interrupts = save_and_disable_interrupts();
     TRACE <<"Erasing target region...";

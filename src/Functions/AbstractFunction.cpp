@@ -210,3 +210,8 @@ Buzzer &AbstractFunction::buzzer()
 {
     return m_clockUi->m_buzzer;
 }
+
+Display &AbstractFunction::display()
+{
+    return m_clockUi->m_display;
+}

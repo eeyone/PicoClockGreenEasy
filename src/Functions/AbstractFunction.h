@@ -107,14 +107,15 @@ protected:
         const std::string &editedValue = "", 
         const std::string &rightText = "");
     ClockUi *clockUi()
-    {
-        return m_clockUi;
-    }
+     {
+         return m_clockUi;
+     }
     void setCurrentMenu(
         std::vector<std::unique_ptr<AbstractFunction>> *menu, 
         AbstractFunction *function = nullptr);
     void selectLastUsedTimeFunction();
     Buzzer &buzzer();
+    Display &display();
 
 private:
     ClockUi *m_clockUi = nullptr;
