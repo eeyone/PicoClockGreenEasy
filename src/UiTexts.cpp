@@ -2,75 +2,83 @@
 
 namespace
 {
-    const char *g_textTable[static_cast<unsigned int>(TextId::TextCount)] =
+    const char *g_textTable[static_cast<unsigned int>(TextId::TextCount)][LanguageCount] =
         {
-            "Alarms",
-            "Tools",
-            "Clock sync",
-            "Options",
-            "Exit",
+            // Main menu
+            {"Alarms", "Alarmes"},
+            {"Tools", "Outils"},
+            {"Clock sync", "Synchro"},
+            {"Options", "Options"},
+            {"Exit", "Sortir"},
 
-            "Unknown",
-            "OK",
-            "Not available",
-            "Down",
-            "Joining",
-            "No IP",
-            "Connected",
-            "Connection failed",
-            "No network found",
-            "Authentication failed",
+            // Wifi status
+            {"Unknown", "Inconnu"},
+            {"OK", "OK"},
+            {"Not available", "Non disponible"},
+            {"Down", "Hors service"},
+            {"Connecting", "Connexion"},
+            {"No IP", "Pas d'IP"},
+            {"Connected", "Connecte"},
+            {"Connection failed", "Echec de la connexion"},
+            {"No network found", "Reseau introuvable"},
+            {"Authentication failed", "Echec de l'authentification"},
 
-            "Next: ",
-            "Al 1: ",
-            "Al 2: ",
-            "Loud",
-            "Gradual",
-            "Skip next alarm: ",
-            "Once",
-            "Weekly",
+            // For alarms
+            {"Next: ", "Prochain: "},
+            {"Al 1: ", "Al 1: "},
+            {"Al 2: ", "Al 2: "},
+            {"Loud", "Fort"},
+            {"Gradual", "Progressif"},
+            {"Skip next alarm: ", "Ignorer prochain: "},
+            {"Once", "Une fois"},
+            {"Weekly", "Hebdo"},
 
-            "Auto light: ",
-            "Time format: ",
-            "24h",
-            "12h",
-            "Date format: ",
-            "Hourly chime: ",
-            "Auto scroll: ",
-            "Brightness: ",
-            "Dark brightness: ",
-            "Dim brightness: ",
-            "Max brightness: ",
-            "On",
-            "Off",
-            "Day",
+            // For options
+            {"Auto light: ", "Luminosite auto: "},
+            {"Time format: ", "Format heure: "},
+            {"24h", "24h"},
+            {"12h", "12h"},
+            {"Date format: ", "Format date: "},
+            {"Hourly chime: ", "Bip horaire: "},
+            {"Auto scroll: ", "Defilement auto: "},
+            {"Brightness: ", "Luminosite: "},
+            {"Dark brightness: ", "Luminosite sombre: "},
+            {"Dim brightness: ", "Luminosite faible: "},
+            {"Max brightness: ", "Luminosite max: "},
+            {"On", "Oui"},
+            {"Off", "Non"},
+            {"Day", "Jour"},
 
-            "Flashlight",
-            "Stopwatch",
-            "Reset",
-            "Countdown",
-            "Set",
+            // Tools menu, stopwatch and countdown
+            {"Flashlight", "Lampe"},
+            {"Stopwatch", "Chrono"},
+            {"Reset", "Remettre a zero"},
+            {"Countdown", "Minuterie"},
+            {"Set", "Regler"},
 
-            "MM-DD",
-            "MM/DD",
-            "DD-MM",
-            "DD/MM",
-            "DD.MM",
+            // Date formats
+            {"MM-DD", "MM-JJ"},
+            {"MM/DD", "MM/JJ"},
+            {"DD-MM", "JJ-MM"},
+            {"DD/MM", "JJ/MM"},
+            {"DD.MM", "JJ.MM"},
 
-            "Source: ",
-            "Sync now",
-            "Daily sync time: ",
-            "Last sync: ",
-            "Last drift: ",
-            "Wifi: ",
+            // Sync menu
+            {"Source: ", "Source: "},
+            {"Sync now", "Synchroniser"},
+            {"Daily sync time: ", "Synchro quotidienne: "},
+            {"Last sync: ", "Derniere synchro: "},
+            {"Last drift: ", "Dernier decalage: "},
+            {"Wifi: ", "Wifi: "},
 
-            "RTC",
-            "NTP",
-            "GPS",
+            // Sync source
+            {"RTC", "RTC"},
+            {"NTP", "NTP"},
+            {"GPS", "GPS"},
     };
 }
 
 std::string uiText(TextId id)
 {
-    return g_textTable[static_cast<unsigned int>(id)];
+    return g_textTable[static_cast<unsigned int>(id)][LANGUAGE];
 }

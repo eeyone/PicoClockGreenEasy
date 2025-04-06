@@ -13,6 +13,9 @@ add_compile_definitions(
     # UTC offset as real number of hours. For example, set 5.5 for UTC+05:30.
     UTC_OFFSET=1
 
+    # Set the language of the user interface. Possible values: English, French
+    LANGUAGE=English
+    
     # Set location for automatic daylight saving time observation. 
     # Possible values: Europe, USA or Unknown (no automatic change)
     DST_LOCATION=Unknown

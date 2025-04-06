@@ -2,6 +2,13 @@
 
 #include <string>
 
+enum Language
+{
+    English = 0,
+    French = 1,
+    LanguageCount
+};
+
 enum class TextId
 {
     // Main menu
