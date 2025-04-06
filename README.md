@@ -30,6 +30,7 @@ This project is an easy-to-use firmware for the Waveshare Pico-Clock-Green writt
       - if auto light is disabled, the brightness can be set as a percentage
       - if auto light is enabled, the brightness can be defined at three ambient light points between which the firmware will interpolate: dark (no ambient light), dim (10% ambient light), max (maximum ambient light)
     - brightness boost: if auto light is enabled and the ambient light is below 10%, the brightness is temporarily increased by 20% during 5 seconds after a user input, so that the display is more readable when setting something during the night
+    - flashlight function: This turns on the 2 white leds on the left side of the device. Their brightness can be adjusted. Note that the display is turned off during this time, as display scanning would limit the available brightness.
 - alarms:
     - next alarm: displays next time and weekday when an alarm will ring, so that the user can quickly check if the alarm was set correctly before sleeping
     - weekly/once: If one or more weekdays are selected, the alarm will ring every week on these days. If no weekday is selected, the alarm will ring when the defined time is reached and disable itself.
@@ -118,13 +119,16 @@ This is the full definition of the menu structure. Use the "enter/set" button to
     - alarm 1 &rarr; set mode &rarr; set hour &rarr; set min &rarr; set weekdays
     - alarm 2 &rarr; set mode &rarr; set hour &rarr; set min &rarr; set weekdays
     - exit: leave submenu
-- countdown: enter submenu
-    - countdown: start/stop 
-    - set &rarr; reset countdown to start time, then set min &rarr; set sec
-    - exit: leave submenu
-- stopwatch: enter submenu
-    - stopwatch: start/stop
-    - reset: reset stopwatch to zero
+- tools: enter submenu
+    - flashlight &rarr; turn on light (which turns off the display) and set its brightness
+    - countdown: enter submenu
+        - countdown: start/stop 
+        - set &rarr; reset countdown to start time, then set min &rarr; set sec
+        - exit: leave submenu
+    - stopwatch: enter submenu
+        - stopwatch: start/stop
+        - reset: reset stopwatch to zero
+        - exit: leave submenu
     - exit: leave submenu
 - clock sync: enter submenu
     - source -> set sync source (RTC, NTP or GPS)
