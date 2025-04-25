@@ -47,9 +47,6 @@ bool Wifi::connectBlocking()
 bool Wifi::connectAsync()
 {
     TRACE << "cyw43_arch_wifi_connect_async with ssid=" <<WIFI_SSID;
-    // I am not sure I am getting it right, but if WIFI_SSID and WIFI_PASSWORD are empty strings, 
-    // cyw43_arch_wifi_connect_async seems to reuse previously passed values, even after a power 
-    // cycle. This behavior is not documented.
     int res = cyw43_arch_wifi_connect_async(WIFI_SSID, WIFI_PASSWORD, CYW43_AUTH_WPA2_AES_PSK);
     TRACE << "Result: " << res;
     return handleConnectResult(res);
