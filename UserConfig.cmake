@@ -11,7 +11,7 @@ add_compile_definitions(
     WIFI_PASSWORD=\"\"
     
     # UTC offset as real number of hours. For example, set 5.5 for UTC+05:30.
-    UTC_OFFSET=1
+    UTC_OFFSET=0
 
     # Set the language of the user interface. Possible values: English, French
     LANGUAGE=English
@@ -19,10 +19,6 @@ add_compile_definitions(
     # Set location for automatic daylight saving time observation. 
     # Possible values: Europe, USA or Unknown (no automatic change)
     DST_LOCATION=Unknown
-
-    # This can be defined to disable the led that blinks on the GPS module to indicate that it got a
-    # lock. This led can be annoying when using the clock in the bedroom.
-    # DISABLE_GPS_MODULE_LED
 
     # This can be defined to simulate the three buttons using the standard input. Enter triggers SET
     # and the arrow keys trigger UP and DOWN.

@@ -33,21 +33,6 @@ namespace
         msg[size - 2] = ckA;
         msg[size - 1] = ckB;
     }
-
-    std::string calculateNmeaMsgChecksum(const std::string &msgContent)
-    {
-        uint8_t checksum = 0;
-        for (char c : msgContent)
-            checksum ^= c;
-        std::ostringstream checksumHex;
-        checksumHex 
-            <<std::hex 
-            <<std::uppercase 
-            <<std::setw(2) 
-            <<std::setfill('0') 
-            <<static_cast<int>(checksum);
-        return checksumHex.str();
-    }
 }
 
 Gps *Gps::m_instance = nullptr;
@@ -87,8 +72,8 @@ void Gps::setEnabled(bool enabled)
 {
     m_enabled = enabled;
     
-    // Tell the receiver to send the message we are interested in (RMC) or not.
-    setNmeaMessageEnabled("RMC", enabled);
+    // Turn the GPS module on or off using the backup mode.
+    setBackupMode(!enabled);
 
     if (enabled)
     {
@@ -96,12 +81,6 @@ void Gps::setEnabled(bool enabled)
         resetTimeoutAlarm();
     } else
     {
-#ifdef DISABLE_GPS_MODULE_LED
-        // Now that we stopped exchanging NMEA messages, let's send a UBX message to disable 
-        // timepulse. This avoids colisions with NMEA messages.
-        disableTimepulse();
-#endif
-
         TRACE << "Stop timer";
         m_timeoutAlarm.stop();
     }
@@ -127,65 +106,24 @@ void Gps::onUartRx()
     while (uart_is_readable(GPS_UART)) 
     {
         char c = uart_getc(GPS_UART);
-        if (m_receivingUbxMsg)
+
+        switch(c)
         {
-            g_receiveBuffer.push_back(c);
-            if (g_receiveBuffer.size() == 6)
-            {
-                // Received enough bytes to read the message size. Decode it and keep it.
-                m_ubxMsgSize = 
-                    g_receiveBuffer[4] + (g_receiveBuffer[5] << 8) + 8;
-                TRACE << "Defined size:" <<m_ubxMsgSize;
-            }
-            else if (g_receiveBuffer.size() == m_ubxMsgSize)
-            {
-                // The message can be dumped for debugging
-#if 0
-                std::ostringstream msg;
-                msg << "UBX message: ";
-                for (int i = 0; i < m_ubxMsgSize; i++)
-                {
-                    msg 
-                    << std::hex 
-                    << std::setfill('0') 
-                    << std::setw(2) 
-                    << (int)g_receiveBuffer[i] 
-                    << ",";
-                }
-                TRACE << msg.str();
-#endif                
-
-                onUbxMessage(std::vector<uint8_t>(g_receiveBuffer.begin(), g_receiveBuffer.end()));
-
+            case 10: // LR: ignore
+                break;
+            case 13: // CR: Handle the received line
+                TRACE << g_receiveBuffer;
+                onNmeaMessage(g_receiveBuffer);
                 g_receiveBuffer.clear();
-                m_receivingUbxMsg = false;
-            } 
-            else if (g_receiveBuffer.size() > 100)
-            {
-                TRACE << "UBX message got too long!";
-                g_receiveBuffer.clear();
-                m_receivingUbxMsg = false;
-            }
-        } else
-        {
-            switch(c)
-            {
-                case 10: // LR: ignore
-                    break;
-                case 13: // CR: Handle the received line
-                    TRACE << g_receiveBuffer;
-                    onNmeaMessage(g_receiveBuffer);
-                    g_receiveBuffer.clear();
-                    break;
-                case 0xB5:
-                    TRACE << "Start of UBX message detected";
-                    m_receivingUbxMsg = true;
-                    // fallthrough, as the received byte is the first of the message;
-                default: // Gather line characters
-                    g_receiveBuffer.push_back(c);
-                    break;
-            }
-
+                break;
+            case 0xB5:
+                TRACE << "Start of UBX message detected";
+                // fallthrough, as the received byte is the first of the message. However, the 
+                // message will not be decoded properly, as support for receiving UBX messages is no 
+                // longer needed and has been removed.
+            default: // Gather line characters
+                g_receiveBuffer.push_back(c);
+                break;
         }
     }
 }
@@ -201,19 +139,6 @@ void Gps::onNmeaMessage(const std::string &msg)
     std::string msgId;
     if (!std::getline(stream, msgId, ','))
         return;
-
-    // Disable this message type if the whole Gps object is disabled, or if it is not an RMC 
-    // message, then ignore this particular one. 
-    if (!m_enabled || msgId != "$GPRMC")
-    {
-        // Don't disable the message if its id looks invalid or it is one that cannot be disabled.
-        if (msgId.size() != 6 || msgId == "$GPTXT")
-            return;
-
-        TRACE << "Disable unwanted message " << msgId;
-        setNmeaMessageEnabled(msgId.substr(3, 3), false);
-        return;
-    }
 
     std::string utcTime;
     if (!std::getline(stream, utcTime, ','))
@@ -242,15 +167,6 @@ void Gps::onNmeaMessage(const std::string &msg)
     onDateTime(date, utcTime);
 }
 
-void Gps::setNmeaMessageEnabled(const std::string &msgId, bool enabled)
-{
-    std::string msgContent = "PUBX,40," + msgId + ",0," + (enabled ? "1" : "0") + ",0,0,0,0";
-    std::string msg = "$" + msgContent + "*" + calculateNmeaMsgChecksum(msgContent) + "\r\n";
-
-    TRACE << "Send NMEA message:" << msg;
-    uart_write_blocking(GPS_UART, reinterpret_cast<const uint8_t *>(msg.data()), msg.size());
-}
-
 void Gps::onDateTime(const std::string &date, const std::string &time)
 {
     if (date.size() < 6 || time.size() < 6)
@@ -270,32 +186,14 @@ void Gps::onDateTime(const std::string &date, const std::string &time)
         m_timeCallback(mktime(&dt), ms);
 }
 
-void Gps::disableTimepulse()
+void Gps::setBackupMode(bool backupMode)
 {
-    // Prepare a CFG-TP5 poll request. 
-    uint8_t msg[] = {0xB5, 0x62, 0x06, 0x31, 0 ,0, 0, 0};
+    uint8_t flag = backupMode ? 2 : 0;
+
+    //               header----  id--------  len-  payload------------------  checksum
+    uint8_t msg[] = {0xB5, 0x62, 0x02, 0x41, 8, 0, 0, 0, 0, 0, flag, 0, 0, 0, 0, 0};
     putUbxMsgChecksum(msg, sizeof(msg));
 
-    // Send CFG-TP5 poll request. The receiver will reply with a CFG-TP5 message that contains the 
-    // timepulse configuration.
-    TRACE << "Send CFG-TP5 UBX message";
+    TRACE << "Send RXM-PMREQ message";
     uart_write_blocking(GPS_UART, msg, sizeof(msg));
-}
-
-void Gps::onUbxMessage(const std::vector<uint8_t> &msg)
-{
-    // Postpone timeout timer
-    resetTimeoutAlarm();
-
-    if (msg[1] == 0x62 && msg[2] == 0x06)
-    {
-        TRACE << "Received CFG-TP5 message";
-        auto copy = msg;
-
-        // Disable the timepulse by changing the corresponding bit and sending back the message
-        copy[34] &= ~1;
-        putUbxMsgChecksum(copy.data(), copy.size());
-        TRACE << "Resent CFG-TP5 message";
-        uart_write_blocking(GPS_UART, copy.data(), copy.size());
-    }
 }
