@@ -19,7 +19,7 @@ namespace
             {"Connecting", "Connexion"},
             {"No IP", "Pas d'IP"},
             {"Connected", "Connecte"},
-            {"Connection failed", "Echec de la connexion"},
+            {"Connection failed", "Echec de connexion"},
             {"No network found", "Reseau introuvable"},
             {"Authentication failed", "Echec de l'authentification"},
 
@@ -35,16 +35,16 @@ namespace
 
             // For options
             {"Auto light: ", "Luminosite auto: "},
-            {"Time format: ", "Format heure: "},
+            {"Time format: ", "Heure: Format: "},
             {"24h", "24h"},
             {"12h", "12h"},
-            {"Date format: ", "Format date: "},
+            {"Date format: ", "Date: Format: "},
             {"Hourly chime: ", "Bip horaire: "},
             {"Auto scroll: ", "Defilement auto: "},
-            {"Brightness: ", "Luminosite: "},
-            {"Dark brightness: ", "Luminosite sombre: "},
-            {"Dim brightness: ", "Luminosite faible: "},
-            {"Max brightness: ", "Luminosite max: "},
+            {"Brightness: ", "Reglage Luminosite: "},
+            {"Dark brightness: ", "Env noir: Luminosite: "},
+            {"Dim brightness: ", "Env sombre: Luminosite: "},
+            {"Max brightness: ", "Env clair: Luminosite: "},
             {"On", "Oui"},
             {"Off", "Non"},
             {"Day", "Jour"},
@@ -66,9 +66,9 @@ namespace
             // Sync menu
             {"Source: ", "Source: "},
             {"Sync now", "Synchroniser"},
-            {"Daily sync time: ", "Synchro quotidienne: "},
+            {"Daily sync time: ", "Heure synchro quotidienne: "},
             {"Last sync: ", "Derniere synchro: "},
-            {"Last drift: ", "Dernier decalage: "},
+            {"Last drift: ", "Decalage derniere synchro: "},
             {"Wifi: ", "Wifi: "},
 
             // Sync source
