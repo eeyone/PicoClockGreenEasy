@@ -39,7 +39,7 @@ namespace
             {"24h", "24h"},
             {"12h", "12h"},
             {"Date format: ", "Date: Format: "},
-            {"Hourly chime: ", "Bip horaire: "},
+            {"Hourly chime: ", "Carillon horaire: "},
             {"Auto scroll: ", "Defilement auto: "},
             {"Brightness: ", "Reglage Luminosite: "},
             {"Dark brightness: ", "Env noir: Luminosite: "},
@@ -47,7 +47,11 @@ namespace
             {"Max brightness: ", "Env clair: Luminosite: "},
             {"On", "Oui"},
             {"Off", "Non"},
-            {"Day", "Jour"},
+            {"Beep", "Bip"},
+            {"If day: Beep", "Si jour: Bip"},
+            {"Sound effect" , "Effet sonore"},
+            {"If day: sound effect", "Si jour: effet sonore"},
+            {"Chime volume: ", "Volume carillon: "},
 
             // Tools menu, stopwatch and countdown
             {"Flashlight", "Lampe"},

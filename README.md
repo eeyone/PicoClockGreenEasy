@@ -14,28 +14,31 @@ This project is an easy-to-use firmware for the Waveshare Pico-Clock-Green writt
     - stopwatch
     - hourly chime
     - auto light, to automatically adjust the brightness of the leds depending on the ambient light
-- time and date synchronization:
+- clock synchronization:
     - NTP synchronization over Wi-Fi (requires a development environment to set the SSID and password)
     - GPS synchronization (requires an additional GPS module)
     - automatic daily re-synchronization
-- additional:
+    - automatic daylight saving time observation (currently only for European Union and USA)
+- user interface:
     - menu based user interface with horizontal and vertical scrolling
     - instant start up: no splash screen or animation, just power the device and you have a clock
     - 3 time display styles: hour:min:sec, hour:min + bar (the bar is a kind of horizontal hourglass to show seconds), hour:min
-    - automatic daylight saving time observation (currently only for European Union and USA)
-    - persistent saving of clock settings to flash memory
-    - optional hourly chime activation using the ambient light sensor
     - configurable date format: 5 formats with different orders and separators
     - configurable brightness: 
       - if auto light is disabled, the brightness can be set as a percentage
       - if auto light is enabled, the brightness can be defined at three ambient light points between which the firmware will interpolate: dark (no ambient light), dim (10% ambient light), max (maximum ambient light)
     - brightness boost: if auto light is enabled and the ambient light is below 10%, the brightness is temporarily increased by 20% during 5 seconds after a user input, so that the display is more readable when setting something during the night
-    - flashlight function: This turns on the 2 white leds on the left side of the device. Their brightness can be adjusted. Note that the display is turned off during this time, as display scanning would limit the available brightness.
 - alarms:
     - next alarm: displays next time and weekday when an alarm will ring, so that the user can quickly check if the alarm was set correctly before sleeping
     - weekly/once: If one or more weekdays are selected, the alarm will ring every week on these days. If no weekday is selected, the alarm will ring when the defined time is reached and disable itself.
     - skip next alarm: e.g. if you woke up before the alarm time or the next day is a national holiday, activate this function and the next alarm (and only this one) will be skipped. This is shown by the slow blinking of the "Alarm On" indicator.
     - gradual alarm mode that progressively increases the duration of beeps to wake up the user gently
+- and also:
+    - persistent saving of clock settings to flash memory
+    - optional hourly chime activation using the ambient light sensor
+    - hourly chime sound effects, as alternative to the internal buzzer (requires an additional DFPlayer Mini module)
+    - flashlight function: This turns on the 2 white leds on the left side of the device. Their brightness can be adjusted. Note that the display is turned off during this time, as display scanning would limit the available brightness.
+
 
 ## Technical features
 - support for Pico and Pico W
@@ -138,8 +141,8 @@ This is the full definition of the menu structure. Use the "enter/set" button to
     - last drift (show how much the internal clock had drifted last time it was synchronized, no actual function)
     - wifi (show wifi connection status, no actual function)
     - exit: leave submenu
-- (if auto light is off) options &rarr; set auto scroll &rarr; set time format &rarr; set date format &rarr; set hourly chime &rarr; set auto light -> set brightness
-- (if auto light is on) options &rarr; set auto scroll &rarr; set time format &rarr; set date format &rarr; set hourly chime &rarr; set auto light -> set dark brightness -> set dim brightness -> set max brightness
+- (if auto light is off) options &rarr; set auto scroll &rarr; set time format &rarr; set date format &rarr; set hourly chime &rarr; set chime volume (if sound effect selected) &rarr; set auto light -> set brightness
+- (if auto light is on) options &rarr; set auto scroll &rarr; set time format &rarr; set date format &rarr; set hourly chime &rarr; set chime volume (if sound effect selected) &rarr; set auto light -> set dark brightness -> set dim brightness -> set max brightness
 
 
 ## Clock synchronization
@@ -202,3 +205,24 @@ With auto light, the brightness is automatically adjusted depending on the ambie
 - press "set"
 - if you need to adjust the brightness in a daylight conditions, you can use the "up" or "down" buttons to set the "max brightness" percentage
 - press "set"
+
+
+## Using a DFPlayer Mini module for sound effects
+
+If you don't like the hourly chime sound produced by the internal buzzer, you can connect a DFPlayer Mini module or one of its clone and configure the firmware to play WAV or MP3 files instead.
+
+Here is the pin wiring I have used:
+|DFPlayer Mini module|Pico   |
+|--------------------|-------|
+|VCC                 |VSYS 5V|
+|RX                  |GP8    |
+|TX                  |GP9    |
+|GND                 |GND    |
+
+These other pins are connected to a small speaker that fits in the Pico Green Clock unit:
+|DFPlayer Mini module|Speaker|
+|--------------------|-------|
+|SPK_1               |+      |
+|SPK_2               |-      |
+
+Then, place the WAV or MP3 file to use as hourly chime in a folder called "01" on a micro SD card, and insert it in the DFPlayer Mini. Finally, activate this sound by setting "Hourly chime" to "Sound effect" or "If day: Sound effect" in the "Options" menu item.

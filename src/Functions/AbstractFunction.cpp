@@ -100,6 +100,11 @@ void AbstractFunction::adjustField(
             modulo = 301;
             bigStepSize = 10;
             break;
+        case PlayerVolume:
+            floor = 0;
+            modulo = 31;
+            bigStepSize = 5;
+            break;
     }
 
     TRACE << "Previous value:" << value;
@@ -214,4 +219,9 @@ Buzzer &AbstractFunction::buzzer()
 Display &AbstractFunction::display()
 {
     return m_clockUi->m_display;
+}
+
+void AbstractFunction::playChimeSound()
+{
+    m_clockUi->playChimeSound();
 }

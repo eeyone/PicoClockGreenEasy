@@ -171,7 +171,14 @@ void ClockUi::onFrameCallback()
         else if (hourlyChimeActive() && m_clock.get().tm_min == 0 && m_clock.get().tm_sec == 0)
         {
             TRACE << "Hourly chime";
-            m_buzzer.beepForMs(100);
+            if (m_settings.get().hourlyChimeMode == Settings::HourlyChimeMode::Beep ||
+                m_settings.get().hourlyChimeMode == Settings::HourlyChimeMode::BeepOnDayLight)
+            {
+                m_buzzer.beepForMs(100);
+            } else
+            {
+                playChimeSound();
+            }
         }
 
         // Autoscroll if enabled, not editing something, the user is in the root menu and has not 
@@ -209,6 +216,12 @@ void ClockUi::onFrameCallback()
 
     handleControlFromConsole();
     renderFrame();
+}
+
+void ClockUi::playChimeSound()
+{
+    m_player.setVolume(m_settings.get().chimeSoundVolume);
+    m_player.playTrackInFolder(1, 1);
 }
 
 void ClockUi::renderFrame()
@@ -381,13 +394,15 @@ void ClockUi::handleControlFromConsole()
 
 bool ClockUi::hourlyChimeActive() const
 {
-    switch (m_settings.get().hourlyChime)
+    switch (m_settings.get().hourlyChimeMode)
     {
         case Settings::HourlyChimeMode::Off:
             return false;
-        case Settings::HourlyChimeMode::On:
+        case Settings::HourlyChimeMode::Beep:
+        case Settings::HourlyChimeMode::Sound:
             return true;
-        case Settings::HourlyChimeMode::OnDayLight:
+        case Settings::HourlyChimeMode::BeepOnDayLight:
+        case Settings::HourlyChimeMode::SoundOnDayLight:
             return m_dayLight;
     }
     return false;
@@ -640,8 +655,13 @@ void ClockUi::onSetButtonPressed()
 
 void ClockUi::editValues()
 {
-    m_editedValueIndex++;
     auto &curFunc = *m_currentMenu->at(m_curFuncIdx);
+
+    do {
+        m_editedValueIndex++;
+    } while (
+        m_editedValueIndex < curFunc.valueCount() && !curFunc.isValueAvailable(m_editedValueIndex));
+
     if (m_editedValueIndex < curFunc.valueCount())
     {
         initHorizScrolling(); // In case something will scroll

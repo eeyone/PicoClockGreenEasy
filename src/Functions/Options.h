@@ -17,13 +17,15 @@ private:
         EditingAutoScroll,
         EditingTimeFormat,
         EditingDateFormat,
-        EditingHourlyChime,
+        EditingHourlyChimeMode,
+        EditingChimeVolume,
         EditingAutoLight,
 
         // Value to edit if auto light is disabled
         EditingManualBrightness,
         
         // Values to edit if auto light is enabled
+        // TODO: use isValueAvailable instead
         EditingBrightnessDark = EditingManualBrightness, 
         EditingBrightnessDim,
         EditingBrightnessBright,
@@ -33,6 +35,7 @@ private:
 
     void renderFrame(Bitmap &frame, int editedValueIndex, int blinkingCounter, bool fullRefresh) override;
     int valueCount() const override;
+    bool isValueAvailable(int valueIndex) const override;
     void modifyValue(int valueIndex, Direction direction) override;
 
     BrightnessHandling brightnessHandling(int valueIndex) const override

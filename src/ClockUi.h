@@ -4,6 +4,7 @@
 #include "PicoClockHw/Display.h"
 #include "PicoClockHw/gpio.h"
 #include "PicoClockHw/Buzzer.h"
+#include "PicoClockHw/Player.h"
 #include "Bitmap.h"
 #include "Clock.h"
 #include "Settings.h"
@@ -42,6 +43,7 @@ private:
     Button m_upButton{K1};
     Button m_downButton{K0};
     Buzzer m_buzzer;
+    Player m_player;
     int m_secondsWithoutUserInput = 0;
     bool m_dayLight = false;
     Settings::AlarmMode m_alarmRinging = Settings::AlarmMode::Off;
@@ -85,6 +87,7 @@ private:
     FunctionType *addFunctionAndReturnPtr(CtorParams... ctorParams);
 
     void onFrameCallback();
+    void playChimeSound();
     void renderFrame();
     void onSetButtonPressed();
     void onUpOrDownButtonPressed(AbstractFunction::Direction direction);

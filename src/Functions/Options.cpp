@@ -42,22 +42,36 @@ void Options::renderFrame(Bitmap &frame, int editedValueIndex, int blinkingCount
                 uiText(static_cast<TextId>(formatTextId)));
             break;
         }
-        case EditingHourlyChime:
+        case EditingHourlyChimeMode:
             TextId modeTextId;
-            switch(settings().hourlyChime)
+            switch(settings().hourlyChimeMode)
             {
+                // TODO: metaprogram to map from Settings::HourlySoundMode to TextId
                 case Settings::HourlyChimeMode::Off:
                     modeTextId = TextId::Off;
                     break;
-                case Settings::HourlyChimeMode::On:
-                    modeTextId = TextId::On;
+                case Settings::HourlyChimeMode::Beep:
+                    modeTextId = TextId::Beep;
                     break;
-                case Settings::HourlyChimeMode::OnDayLight:
-                    modeTextId = TextId::Day;
+                case Settings::HourlyChimeMode::BeepOnDayLight:
+                    modeTextId = TextId::BeepOnDayLight;
+                    break;
+                case Settings::HourlyChimeMode::Sound:
+                    modeTextId = TextId::Sound;
+                    break;
+                case Settings::HourlyChimeMode::SoundOnDayLight:
+                    modeTextId = TextId::SoundOnDayLight;
                     break;
             }
             renderScrollingText(
                 frame, fullRefresh, uiText(TextId::HourlyChimeColon), uiText(modeTextId));
+            break;
+        case EditingChimeVolume:
+            renderScrollingText(
+                frame, 
+                fullRefresh, 
+                uiText(TextId::ChimeVolumeColon), 
+                std::to_string(settings().chimeSoundVolume));
             break;
         case EditingAutoLight:
             renderScrollingText(
@@ -108,6 +122,15 @@ int Options::valueCount() const
         return EditingManualBrightness + 1; // No more editable value after this one
 }
 
+bool Options::isValueAvailable(int valueIndex) const 
+{
+    // The chime volume can only be set if the sound effects mode is selected.
+    return 
+        valueIndex != EditingChimeVolume || 
+        settings().hourlyChimeMode == Settings::HourlyChimeMode::Sound ||
+        settings().hourlyChimeMode == Settings::HourlyChimeMode::SoundOnDayLight;
+}
+
 void Options::modifyValue(int valueIndex, Direction direction)
 {
     switch(valueIndex)
@@ -124,8 +147,15 @@ void Options::modifyValue(int valueIndex, Direction direction)
             adjustEnum(modifySettings().dateFormat, direction);
             break;
 
-        case EditingHourlyChime:
-            adjustEnum(modifySettings().hourlyChime, direction);
+        case EditingHourlyChimeMode:
+            adjustEnum(modifySettings().hourlyChimeMode, direction);
+            // TODO: Do no offer sound if no player was detected
+            break;
+
+        case EditingChimeVolume:
+            adjustField(direction, PlayerVolume, modifySettings().chimeSoundVolume);
+            playChimeSound();
+            // TODO: put player in sleep mode after editing volume
             break;
 
         case EditingAutoLight:

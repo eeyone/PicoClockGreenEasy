@@ -62,6 +62,10 @@ public:
     {}
     
     virtual void startEditingValue(int valueIndex) {}
+    virtual bool isValueAvailable(int valueIndex) const
+    {
+        return true;
+    }
     virtual void modifyValue(int valueIndex, Direction direction) {}
     virtual void finishEditing() {}
 
@@ -81,6 +85,7 @@ protected:
         Second,
         ManualBrightness,
         AutoBrightnessPoint,
+        PlayerVolume,
     };
 
     // Method to access ClockUi
@@ -116,6 +121,7 @@ protected:
     void selectLastUsedTimeFunction();
     Buzzer &buzzer();
     Display &display();
+    void playChimeSound();
 
 private:
     ClockUi *m_clockUi = nullptr;

@@ -1,5 +1,7 @@
 #include "Gps.h"
 
+#include "gpio.h"
+
 #include "Utils/Trace.h"
 #include "Utils/Trampoline.h"
 
@@ -41,8 +43,8 @@ Gps::Gps()
 {
     m_instance = this;
     uart_init(GPS_UART, 9600);
-    gpio_set_function(0, GPIO_FUNC_UART);
-    gpio_set_function(1, GPIO_FUNC_UART);
+    gpio_set_function(GPS_TX, GPIO_FUNC_UART);
+    gpio_set_function(GPS_RX, GPIO_FUNC_UART);
 
     // Select correct interrupt for the UART we are using
     const int UART_IRQ = GPS_UART == uart0 ? UART0_IRQ : UART1_IRQ;

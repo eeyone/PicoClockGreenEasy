@@ -51,6 +51,7 @@ add_executable( ${PROJECT_NAME}
                 src/PicoClockHw/Flash.cpp
                 src/PicoClockHw/Gps.cpp
                 src/PicoClockHw/Platform.cpp
+                src/PicoClockHw/Player.cpp
                 src/PicoClockHw/Rtc.cpp
                 src/PicoClockHw/Timer.cpp
 )

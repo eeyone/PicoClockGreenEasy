@@ -8,8 +8,11 @@ public:
     enum class HourlyChimeMode : uint8_t
     {
         Off = 0,
-        On = 1,
-        OnDayLight,
+        Beep = 1,
+        BeepOnDayLight,
+        Sound,
+        SoundOnDayLight,
+
         Count
     };
 
@@ -66,7 +69,7 @@ public:
         bool autoScroll = false;
         bool useCelsius = true;
         bool format24h = true;
-        HourlyChimeMode hourlyChime = HourlyChimeMode::Off; 
+        HourlyChimeMode hourlyChimeMode = HourlyChimeMode::Off; 
         bool autoLight = true; 
         Alarm alarm1;
         Alarm alarm2;
@@ -80,6 +83,7 @@ public:
         DateFormat dateFormat = DateFormat::MonthDashDay;
         SyncSource syncSource = SyncSource::Rtc;
         int flashlightBrightness = 50;
+        int chimeSoundVolume = 30;
     };
 
     Settings();

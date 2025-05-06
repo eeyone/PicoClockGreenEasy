@@ -54,7 +54,11 @@ enum class TextId
     BrightnessBrightColon,
     On,
     Off,
-    Day,
+    Beep,
+    BeepOnDayLight,
+    Sound,
+    SoundOnDayLight,
+    ChimeVolumeColon,
 
     // Tools menu, stopwatch and countdown
     Flashlight,
