@@ -69,8 +69,8 @@ ClockUi::ClockUi() : m_clock(Display::FRAME_RATE, m_settings)
 
     TRACE << "Add functions of the alarm submenu";
     alarmSubmenu->addFunction<SkipNextAlarm>(this);
-    alarmSubmenu->addFunction<Alarm>(this, Alarm::Alarm1);
-    alarmSubmenu->addFunction<Alarm>(this, Alarm::Alarm2);
+    alarmSubmenu->addFunction<Alarm>(this, Clock::Alarm1);
+    alarmSubmenu->addFunction<Alarm>(this, Clock::Alarm2);
 
     TRACE <<"Add functions of the tools submenu";
     toolsSubmenu->addFunction<Flashlight>(this);
@@ -132,12 +132,21 @@ FunctionType *ClockUi::addFunctionAndReturnPtr(CtorParams... ctorParams)
     return rawPtr;
 }
 
+void ClockUi::playAlarmMusic(Clock::AlarmId alarmId)
+{
+    if (m_settings.get().alarmMusic[alarmId].track == 0)
+        m_player.playRandom();
+    else
+        m_player.playTrack(m_settings.get().alarmMusic[alarmId].track);
+}
+
 void ClockUi::onFrameCallback()
 {
     // Make the clock and some functions tick
     bool clockAdjusted = false;
+    Clock::AlarmId reachedAlarmId = Clock::NoAlarm;
     Settings::AlarmMode reachedAlarmMode = Settings::AlarmMode::Off;
-    m_clock.tick(clockAdjusted, reachedAlarmMode);
+    m_clock.tick(clockAdjusted, reachedAlarmMode, reachedAlarmId);
     m_countdownFunc->tick();
     m_stopwatchFunc->tick();
 
@@ -150,6 +159,12 @@ void ClockUi::onFrameCallback()
     {
         m_alarmRinging = reachedAlarmMode;
         m_ringingForSecs = 0;
+
+        if (reachedAlarmMode == Settings::AlarmMode::Music)
+        {
+            m_player.setVolume(m_settings.get().alarmMusic[reachedAlarmId].volume);
+            playAlarmMusic(reachedAlarmId);
+        }
     }
 
     adjustBrightness();
@@ -160,13 +175,23 @@ void ClockUi::onFrameCallback()
         {
             m_ringingForSecs++;
             
-            if (m_alarmRinging == Settings::AlarmMode::Gradual)
-                m_buzzer.beepForMs(m_ringingForSecs);
-            else
-                m_buzzer.beepForMs(500);
+            switch (m_alarmRinging)
+            {
+                case Settings::AlarmMode::Gradual:
+                    m_buzzer.beepForMs(m_ringingForSecs);
+                    break;
+                case Settings::AlarmMode::Loud:
+                    m_buzzer.beepForMs(500);
+                    break;
+            }
 
-            if (m_ringingForSecs >= STOP_RINGING_AFTER_SEC)
+            if (m_ringingForSecs > STOP_RINGING_AFTER_SEC)
+            {
+                if (m_alarmRinging == Settings::AlarmMode::Music)
+                    m_player.stop();
+
                 m_alarmRinging = Settings::AlarmMode::Off;
+            }
         }
         else if (hourlyChimeActive() && m_clock.get().tm_min == 0 && m_clock.get().tm_sec == 0)
         {
@@ -216,6 +241,7 @@ void ClockUi::onFrameCallback()
 
     handleControlFromConsole();
     renderFrame();
+    // TODO: make method shorter
 }
 
 void ClockUi::playChimeSound()
@@ -690,6 +716,9 @@ bool ClockUi::onAnyButtonTouched()
 
     if (m_alarmRinging != Settings::AlarmMode::Off)
     {
+        if (m_alarmRinging == Settings::AlarmMode::Music)
+            m_player.stop();
+
         m_alarmRinging = Settings::AlarmMode::Off;
         return true; // Request not to do anything else
     }

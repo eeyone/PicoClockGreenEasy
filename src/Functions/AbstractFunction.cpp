@@ -61,7 +61,7 @@ int AbstractFunction::editedValueIndex() const
 }
 
 void AbstractFunction::adjustField(
-    Direction dir, FieldBehaviour behaviour, int &value, int daysInMonth)
+    Direction dir, FieldBehaviour behaviour, int &value, int count)
 {
     int bigStepSize = 0;
     int floor = 0;
@@ -78,7 +78,7 @@ void AbstractFunction::adjustField(
             bigStepSize = 3;
             break;
         case Day:
-            modulo = daysInMonth;
+            modulo = count;
             floor = 1;
             bigStepSize = 7;
             break;
@@ -102,8 +102,13 @@ void AbstractFunction::adjustField(
             break;
         case PlayerVolume:
             floor = 0;
-            modulo = 31;
+            modulo = count + 1;
             bigStepSize = 5;
+            break;
+        case PlayerTrack:
+            floor = 0;
+            modulo = count + 1; 
+            bigStepSize = 10;
             break;
     }
 
@@ -216,6 +221,11 @@ Buzzer &AbstractFunction::buzzer()
     return m_clockUi->m_buzzer;
 }
 
+Player &AbstractFunction::player()
+{
+    return m_clockUi->m_player;
+}
+
 Display &AbstractFunction::display()
 {
     return m_clockUi->m_display;
@@ -224,4 +234,9 @@ Display &AbstractFunction::display()
 void AbstractFunction::playChimeSound()
 {
     m_clockUi->playChimeSound();
+}
+
+void AbstractFunction::playAlarmMusic(Clock::AlarmId alarmId)
+{
+    m_clockUi->playAlarmMusic(alarmId);
 }

@@ -33,10 +33,11 @@ This project is an easy-to-use firmware for the Waveshare Pico-Clock-Green writt
     - weekly/once: If one or more weekdays are selected, the alarm will ring every week on these days. If no weekday is selected, the alarm will ring when the defined time is reached and disable itself.
     - skip next alarm: e.g. if you woke up before the alarm time or the next day is a national holiday, activate this function and the next alarm (and only this one) will be skipped. This is shown by the slow blinking of the "Alarm On" indicator.
     - gradual alarm mode that progressively increases the duration of beeps to wake up the user gently
+    - music alarm mode that plays back WAV or MP3 files (requires an additional DFPlayer Mini module)
 - and also:
     - persistent saving of clock settings to flash memory
     - optional hourly chime activation using the ambient light sensor
-    - hourly chime sound effects, as alternative to the internal buzzer (requires an additional DFPlayer Mini module)
+    - hourly chime sound effect, as alternative to the internal buzzer (requires an additional DFPlayer Mini module)
     - flashlight function: This turns on the 2 white leds on the left side of the device. Their brightness can be adjusted. Note that the display is turned off during this time, as display scanning would limit the available brightness.
 
 
@@ -119,8 +120,8 @@ This is the full definition of the menu structure. Use the "enter/set" button to
 - temperature: toggle Celcius/Fahrenheit
 - alarms (with next alarm time and weekday if an alarm is activated): enter submenu
     - (if an alarm is activated) skip next alarm: toggle on/off
-    - alarm 1 &rarr; set mode &rarr; set hour &rarr; set min &rarr; set weekdays
-    - alarm 2 &rarr; set mode &rarr; set hour &rarr; set min &rarr; set weekdays
+    - alarm 1 &rarr; set mode &rarr; set volume (if music mode selected) &rarr; set track (if music mode selected) &rarr; set hour &rarr; set min &rarr; set weekdays
+    - alarm 2 &rarr; set mode &rarr; set volume (if music mode selected) &rarr; set track (if music mode selected) &rarr; set hour &rarr; set min &rarr; set weekdays
     - exit: leave submenu
 - tools: enter submenu
     - flashlight &rarr; turn on light (which turns off the display) and set its brightness
@@ -207,22 +208,24 @@ With auto light, the brightness is automatically adjusted depending on the ambie
 - press "set"
 
 
-## Using a DFPlayer Mini module for sound effects
+## Using a DFPlayer Mini module for music and chime sound
 
-If you don't like the hourly chime sound produced by the internal buzzer, you can connect a DFPlayer Mini module or one of its clone and configure the firmware to play WAV or MP3 files instead.
+If you don't like the beeps produced by the internal buzzer for alarms and hourly chimes, you can connect a DFPlayer Mini module or one of its clone (I used the MP3-TF-16P) and configure the firmware to play WAV or MP3 files instead.
 
 Here is the pin wiring I have used:
-|DFPlayer Mini module|Pico   |
+|[DFPlayer Mini module](https://wiki.dfrobot.com/DFPlayer_Mini_SKU_DFR0299#target_3)|Pico|
 |--------------------|-------|
 |VCC                 |VSYS 5V|
-|RX                  |GP8    |
-|TX                  |GP9    |
+|RX                  |GP20   |
+|TX                  |GP21   |
 |GND                 |GND    |
 
-These other pins are connected to a small speaker that fits in the Pico Green Clock unit:
-|DFPlayer Mini module|Speaker|
+These other pins can be connected to a small speaker that fits in the Pico Green Clock unit:
+|[DFPlayer Mini module](https://wiki.dfrobot.com/DFPlayer_Mini_SKU_DFR0299#target_3)|Speaker|
 |--------------------|-------|
 |SPK_1               |+      |
 |SPK_2               |-      |
 
-Then, place the WAV or MP3 file to use as hourly chime in a folder called "01" on a micro SD card, and insert it in the DFPlayer Mini. Finally, activate this sound by setting "Hourly chime" to "Sound effect" or "If day: Sound effect" in the "Options" menu item.
+Place the WAV or MP3 files to use as alarm on the root of a micro SD card, and insert it in the DFPlayer Mini. Then, set the mode of an alarm to "Music". For a given alarm, you can also set the volume and the track to use, or set the track it to random.
+
+Place the WAV or MP3 file to use as hourly chime in a folder called "01" on a micro SD card, and insert it in the DFPlayer Mini. Then, activate this sound by setting "Hourly chime" to "Sound effect" or "If day: Sound effect" in the "Options" menu item.

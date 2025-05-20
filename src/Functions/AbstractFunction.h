@@ -2,6 +2,7 @@
 
 #include "Settings.h"
 #include "Bitmap.h"
+#include "Clock.h"
 #include "PicoClockHw/Display.h"
 
 #include <string>
@@ -12,6 +13,7 @@ class Clock;
 class Bitmap;
 class ClockUi;
 class Buzzer;
+class Player;
 
 class AbstractFunction
 {
@@ -86,6 +88,7 @@ protected:
         ManualBrightness,
         AutoBrightnessPoint,
         PlayerVolume,
+        PlayerTrack
     };
 
     // Method to access ClockUi
@@ -96,8 +99,8 @@ protected:
     void convertHour(int hour24, int &displayedHour, bool &morning) const;
     void editValues();
     int editedValueIndex() const;
-    // If behaviour==Day, daysInMonth must be provided
-    void adjustField(Direction dir, FieldBehaviour behaviour, int &value, int dayInMonth = 0);
+    // If behaviour is Day, PlayerVolume or PlayerTrack, count must be provided
+    void adjustField(Direction dir, FieldBehaviour behaviour, int &value, int count = 0);
     template <typename Enum>
     void adjustEnum(Enum &value, AbstractFunction::Direction dir);
     void putAmPmIndicators(Bitmap &frame, bool morning);
@@ -120,8 +123,10 @@ protected:
         AbstractFunction *function = nullptr);
     void selectLastUsedTimeFunction();
     Buzzer &buzzer();
+    Player &player();
     Display &display();
     void playChimeSound();
+    void playAlarmMusic(Clock::AlarmId alarmId);
 
 private:
     ClockUi *m_clockUi = nullptr;

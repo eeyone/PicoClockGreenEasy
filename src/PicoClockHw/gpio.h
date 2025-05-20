@@ -7,8 +7,8 @@ enum Gpio
     K2 = 2,         // Input:  top button
     SDA = 6,        // Output: I2C data line to DS3231
     SCL = 7,        // Output: I2C clock line to DS3231
-    DFPLAYER_TX = 8,// Output (optional): UART transmission to the DFPlayer Mini module
-    DFPLAYER_RX = 9,// Input  (optional): UART reception from the DFPlayer Mini module
+    PLAYER_TX = 20, // Output (optional): UART transmission to the DFPlayer Mini module
+    PLAYER_RX = 21, // Input  (optional): UART reception from the DFPlayer Mini module
     CLK = 10,       // Output: clock line for LED matrix controller
     SDI = 11,       // Output: data to the LED matrix controller
     LE = 12,        // Output: Latch Enable for LED matrix controller

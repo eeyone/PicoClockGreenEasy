@@ -11,9 +11,9 @@ bool isEnabledForFile(const std::string &file)
 {
     return 
         file == "Clock.cpp" || 
-        file == "Timer.cpp" || 
-        file == "Button.cpp" ||
-        file == "Flash.cpp";
+        file == "main.cpp" || 
+        file == "Wifi.cpp" ||
+        file == "Player.cpp";
 }
 } // namespace
 
@@ -31,7 +31,7 @@ Trace::Trace(const char *filePath, int line) : m_enabled()
     if (!m_enabled)
         return;
     
-    std::cout << file << ":" << line << " ";
+    std::cout << file << ":" << std::dec << line << " ";
 
     // For performance tuning, also print the elapsed microseconds since the last trace
     uint64_t now = Platform::timeUs();

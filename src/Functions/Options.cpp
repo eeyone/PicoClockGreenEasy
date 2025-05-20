@@ -1,6 +1,7 @@
 #include "Options.h"
 #include "UiTexts.h"
 #include "Utils/Trace.h"
+#include "PicoClockHw/Player.h"
 
 namespace
 {
@@ -153,9 +154,12 @@ void Options::modifyValue(int valueIndex, Direction direction)
             break;
 
         case EditingChimeVolume:
-            adjustField(direction, PlayerVolume, modifySettings().chimeSoundVolume);
+            adjustField(
+                direction, PlayerVolume, modifySettings().chimeSoundVolume, Player::MAX_VOLUME);
             playChimeSound();
-            // TODO: put player in sleep mode after editing volume
+            // TODO: check if it makes sense to put the player in sleep mode after editing volume
+            // TODO: as the DFPlayer seemed to have crashed after restarting the chime sound 
+            // repeatedly, try starting the sound only if it's not playing yet.
             break;
 
         case EditingAutoLight:

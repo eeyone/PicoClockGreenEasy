@@ -1,7 +1,12 @@
+// Based on these datasheets:
 // https://www.electronicoscaldas.com/datasheet/DFR0299-DFPlayer-Mini-Manual.pdf?srsltid=AfmBOoq-OtiGXRcKGhYnv_vwpQqS3vaBDtOVyyfwmSWj7EP0cMv1CriK
 // http://www.trainelectronics.com/Arduino/MP3Sound/TalkingTemperature/FN-M16P%20Embedded%20MP3%20Audio%20Module%20Datasheet.pdf
 
+// TODO: check power consumption of the module and if it is reduced by entering standby mode using
+// command 0x0A. 
+
 #include "Player.h"
+#include "gpio.h"
 #include "Utils/Trace.h"
 #include "Utils/Trampoline.h"
 #include <hardware/uart.h>
@@ -21,8 +26,8 @@ Player::Player()
     m_instance = this;
 
     uart_init(PLAYER_UART, 9600);
-    gpio_set_function(8, GPIO_FUNC_UART);
-    gpio_set_function(9, GPIO_FUNC_UART);
+    gpio_set_function(PLAYER_TX, GPIO_FUNC_UART);
+    gpio_set_function(PLAYER_RX, GPIO_FUNC_UART);
 
     // TODO: centralize this in a common place, as Gps.cpp has similar code
     // Select correct interrupt for the UART we are using
@@ -35,6 +40,16 @@ Player::Player()
 
     // Enable the UART to send interrupts on reception
     uart_set_irq_enables(PLAYER_UART, true/*has data*/, false/*needs data*/);
+}
+
+Player::~Player()
+{
+    uart_set_irq_enables(PLAYER_UART, false/*has data*/, false/*needs data*/);
+    const int UART_IRQ = PLAYER_UART == uart0 ? UART0_IRQ : UART1_IRQ;
+    irq_set_enabled(UART_IRQ, false);
+
+    uart_deinit(PLAYER_UART);
+    m_instance = nullptr;
 }
 
 void Player::onUartRx()
@@ -58,8 +73,17 @@ void Player::onUartRx()
 
 void Player::onRxTimeout()
 {
+    // TODO: move this and other similar snippets to Trace()
+#ifdef TRACE_TO_STDIO
+    std::ostringstream stream;
+    stream << std::uppercase << std::hex;
+    for (auto c : m_receiveBuffer)
+        stream  << std::setfill('0') << std::setw(2) << (int)c << " ";
+#endif
+
+    TRACE << "Timeout waiting for end of message. Received so far:" << stream.str();
+
     m_receiveBuffer.clear();
-    TRACE << "Timeout waiting for end of message";
 }
 
 void Player::onMsgEnd()
@@ -168,6 +192,57 @@ void Player::onMsgEnd()
                     TRACE << "Unknown error" << param;
             }
             break;
+        case 0x41: 
+            TRACE << "Command acknowledged";
+//            sendQueuedMessage();
+            break;
+        case 0x42:
+        {
+            PlaybackStatus status = PlaybackStatus::Unknown;
+            switch(param & 255)
+            {
+                case 0x01:
+                    TRACE << "Current status: playing";
+                    status = PlaybackStatus::Playing;
+                    break;
+                case 0x02:
+                    TRACE << "Current status: paused";
+                    status = PlaybackStatus::Paused;
+                    break;
+                case 0x00:
+                    TRACE << "Current status: Playback finished";
+                    status = PlaybackStatus::Stopped;
+                    break;
+                case 0x08:
+                    TRACE << "No device online or sleeping";
+                    status = PlaybackStatus::Sleeping;
+                    break;
+                default:
+                    TRACE << "Unknown current status:" << param;
+            }
+
+            if (status != PlaybackStatus::Unknown && m_statusCallback)
+            {
+                m_statusCallback(status);
+                m_statusCallback = nullptr;
+            }
+
+            break;
+        }
+        case 0x43:
+            TRACE << "Current volume:" << param;
+            break;
+        case 0x48:
+            TRACE << "Number of tracks in the root of micro SD card:" << param;
+            if (m_trackCountCallback)
+            {
+                m_trackCountCallback(param);
+                m_trackCountCallback = nullptr;
+            }
+            break;
+        case 0x4C:
+            TRACE << "Number of folders in the root of micro SD card:" << param;
+            break;
         default:
             TRACE << "Unknown message with command code" 
                 << std::uppercase << std::hex
@@ -177,25 +252,14 @@ void Player::onMsgEnd()
     }
 }
 
-void Player::selectDevice()
-{
-    TRACE << "Specified device is micro SD";
-    sendCommand(0x09, 0x00, 0x02);
-}
-
 void Player::setVolume(int volume)
 {
     sendCommand(0x06, 0x00, volume);
 }
 
-void Player::play()
+void Player::playTrack(int track)
 {
-    {
-        TRACE << "Play";
-        uint8_t msg[] = {0x7E, 0xFF, 0x06, 0x0D, 0x00, 0x00, 0x00, 0xFE, 0xEE, 0xEF};
-    //    uint8_t msg[] = {0x7E, 0xFF, 0x06, 0x03, 0x00, 0x00, 0x01, 0xFE, 0xF7, 0xEF};
-        uart_write_blocking(PLAYER_UART, msg, sizeof(msg));
-    }
+    sendCommand(0x03, 0x00, track);
 }
 
 void Player::playTrackInFolder(int track, int folder)
@@ -203,15 +267,20 @@ void Player::playTrackInFolder(int track, int folder)
     sendCommand(0x0F, folder, track);
 }
 
-void Player::queryFolderCount()
+void Player::playRandom()
 {
-    sendCommand(0x4F, 0x00, 0x00);
+    sendCommand(0x18, 0x00, 0x00);
+}
+
+void Player::stop()
+{
+    sendCommand(0x16, 0x00, 0x00);
 }
 
 void Player::sendCommand(uint8_t command, uint8_t param1, uint8_t param2)
 {
     TRACE << "Send command" << std::hex << (int)command << "with parameters" << (int)param1 <<"and" << (int)param2;
-    uint8_t msg[] = {0x7E, 0xFF, 0x06, command, 0x00, param1, param2, 0, 0, 0xEF};
+    uint8_t msg[] = {0x7E, 0xFF, 0x06, command, 1, param1, param2, 0, 0, 0xEF};
 
     // Calculate checksum
     uint16_t checksum = 0;
@@ -222,6 +291,7 @@ void Player::sendCommand(uint8_t command, uint8_t param1, uint8_t param2)
     msg[7] = checksum >> 8; // High byte
     msg[8] = checksum & 0xFF; // Low byte
 
+#ifdef TRACE_TO_STDIO
     std::ostringstream stream;
     stream << std::uppercase << std::hex;
     for (auto c : msg)
@@ -229,18 +299,21 @@ void Player::sendCommand(uint8_t command, uint8_t param1, uint8_t param2)
         stream  << std::setfill('0') << std::setw(2) << (int)c << " ";
     }
     TRACE  <<"Send message:" << stream.str();
+#endif
 
     uart_write_blocking(PLAYER_UART, msg, sizeof(msg));
 }
 
-void Player::queryCurrentStatus()
+void Player::queryStatus(const std::function<void(PlaybackStatus)> &callback)
 {
     TRACE << "Query current status";
-    uint8_t msg[] = {0x7E, 0xFF, 0x06, 0x42, 0x00, 0x00, 0x00, 0xFE, 0xB9, 0xEF};
-    uart_write_blocking(PLAYER_UART, msg, sizeof(msg));
-    {
-        TRACE << "Query number of tracks in the root of micro SD card";
-        uint8_t msg[] = {0x7E, 0xFF, 0x06, 0x48, 0x00, 0x00, 0x00, 0xFE, 0xB3, 0xEF};
-        uart_write_blocking(PLAYER_UART, msg, sizeof(msg));
-    }
+    sendCommand(0x42, 0, 0);
+    m_statusCallback = callback;
+}
+
+void Player::queryTotalTrackCount(const std::function<void(int)> &callback)
+{
+    TRACE << "Query total track count";
+    sendCommand(0x48, 0x00, 0x00);
+    m_trackCountCallback = callback;
 }

@@ -21,6 +21,7 @@ public:
         Off = 0,
         Gradual,
         Loud,
+        Music,
         Count
     };
 
@@ -63,6 +64,12 @@ public:
         }
     };
 
+    struct AlarmMusic
+    {
+        int track = 0; // 0 means random track
+        int volume = 30;
+    };
+
     struct Values
     {
         int8_t function = 1; // Time with HourMinBar style by default
@@ -84,6 +91,7 @@ public:
         SyncSource syncSource = SyncSource::Rtc;
         int flashlightBrightness = 50;
         int chimeSoundVolume = 30;
+        AlarmMusic alarmMusic[2];
     };
 
     Settings();

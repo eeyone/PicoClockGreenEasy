@@ -7,13 +7,7 @@ class Bitmap;
 class Alarm : public AbstractFunction
 {
 public:   
-    enum AlarmId
-    {
-        Alarm1,
-        Alarm2
-    };
-
-    Alarm(ClockUi *clockUi, AlarmId id) : AbstractFunction(clockUi), m_alarmId(id)
+    Alarm(ClockUi *clockUi, Clock::AlarmId id) : AbstractFunction(clockUi), m_alarmId(id)
     {}
 
 private:
@@ -22,7 +16,8 @@ private:
     int valueCount() const override;
     void startEditingValue(int valueIndex) override;
     void modifyValue(int valueIndex, Direction direction) override;
-
+    bool isValueAvailable(int valueIndex) const override;
+  
     const Settings::Alarm &alarmSettings() const;
     Settings::Alarm &modifyAlarmSettings();
 
@@ -30,12 +25,15 @@ private:
     {
         NoEditing = 0,
         EditingAlarmMode,
+        EditingAlarmVolume,
+        EditingAlarmTrack,
         EditingAlarmHour,
         EditingAlarmMinute,
         EditingAlarmWeekDays,
         ValueCount 
     };
 
-    const AlarmId m_alarmId;
+    const Clock::AlarmId m_alarmId;
     CyclicCounter m_editedAlarmWeekDay {7, 0};
+    int m_trackCount = 0;
 };

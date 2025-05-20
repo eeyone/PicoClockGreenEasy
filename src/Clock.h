@@ -40,7 +40,7 @@ public:
         m_rtcSync = SyncingToRtc;
     }
     
-    void tick(bool &clockAdjusted, Settings::AlarmMode &reachedAlarmMode);
+    void tick(bool &clockAdjusted, Settings::AlarmMode &reachedAlarmMode, AlarmId &reachedAlarmId);
     bool nextAlarm(int &weekday, int &hour, int &min) const;
 
     bool isAlarmOn() const
@@ -96,7 +96,7 @@ private:
 
     void onExternalTimeReceived(time_t utcTime, uint32_t ms, Settings::SyncSource source);
     void monitorWifiConnection();
-    Settings::AlarmMode checkIfAlarmReached();
+    void checkIfAlarmReached(Settings::AlarmMode &reachedAlarmMode, AlarmId &reachedAlarmId);
     bool alarmReached(AlarmId id) const;
     const Settings::Alarm &alarm(AlarmId id) const;
     bool nextAlarmAfter(

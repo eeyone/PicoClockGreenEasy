@@ -149,10 +149,12 @@ void Clock::onExternalTimeReceived(time_t utcTime, uint32_t ms, Settings::SyncSo
     }
 }
 
-void Clock::tick(bool &clockAdjusted, Settings::AlarmMode &reachedAlarmMode)
+void Clock::tick(
+    bool &clockAdjusted, Settings::AlarmMode &reachedAlarmMode, AlarmId &reachedAlarmId)
 {
     clockAdjusted = false;
     reachedAlarmMode = Settings::AlarmMode::Off;
+    reachedAlarmId = NoAlarm;
 
     if (m_tickCount.increment())
     {
@@ -201,7 +203,7 @@ void Clock::tick(bool &clockAdjusted, Settings::AlarmMode &reachedAlarmMode)
     // Handle events to be checked on every minute.
     if (m_tickCount == 0 && m_tm.tm_sec == 0)
     {
-        reachedAlarmMode = checkIfAlarmReached();
+        checkIfAlarmReached(reachedAlarmMode, reachedAlarmId);
 
         // Perform the daily synchronization if the time is reached.
         if (m_tm.tm_min == m_syncInfo.dailySyncMin && m_tm.tm_hour == m_syncInfo.dailySyncHour)
@@ -243,16 +245,19 @@ void Clock::monitorWifiConnection()
     }
 }
 
-Settings::AlarmMode Clock::checkIfAlarmReached()
+void Clock::checkIfAlarmReached(Settings::AlarmMode &reachedAlarmMode,AlarmId &reachedAlarmId)
 {
-    Settings::AlarmMode reachedAlarmMode = Settings::AlarmMode::Off;
+    reachedAlarmId = NoAlarm;
+    reachedAlarmMode = Settings::AlarmMode::Off;
     const struct Settings::Alarm *reachedAlarm = nullptr;
     if (alarmReached(Alarm1))
     {
+        reachedAlarmId = Alarm1;
         reachedAlarm = &m_settings.get().alarm1;
         reachedAlarmMode = m_settings.get().alarm1.mode;
     } else if (alarmReached(Alarm2))
     {
+        reachedAlarmId = Alarm2;
         reachedAlarm = &m_settings.get().alarm2;
         reachedAlarmMode = m_settings.get().alarm2.mode;
     }
@@ -275,10 +280,9 @@ Settings::AlarmMode Clock::checkIfAlarmReached()
             // that no alarm was reached.
             m_settings.modify().skipNextAlarm = false;
             reachedAlarmMode = Settings::AlarmMode::Off;
+            reachedAlarmId = NoAlarm;
         }
     }
-
-    return reachedAlarmMode;
 }
 
 void Clock::setTmFromTime()
