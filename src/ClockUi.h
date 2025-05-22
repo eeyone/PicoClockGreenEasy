@@ -87,6 +87,7 @@ private:
     FunctionType *addFunctionAndReturnPtr(CtorParams... ctorParams);
 
     void onFrameCallback();
+    void onSecond();
     void playChimeSound();
     void playAlarmMusic(Clock::AlarmId alarmId);
     void renderFrame();

@@ -170,78 +170,80 @@ void ClockUi::onFrameCallback()
     adjustBrightness();
 
     if (m_clock.tickCount() == 0)
-    {
-        if (m_alarmRinging != Settings::AlarmMode::Off)
-        {
-            m_ringingForSecs++;
-            
-            switch (m_alarmRinging)
-            {
-                case Settings::AlarmMode::Gradual:
-                    m_buzzer.beepForMs(m_ringingForSecs);
-                    break;
-                case Settings::AlarmMode::Loud:
-                    m_buzzer.beepForMs(500);
-                    break;
-            }
-
-            if (m_ringingForSecs > STOP_RINGING_AFTER_SEC)
-            {
-                if (m_alarmRinging == Settings::AlarmMode::Music)
-                    m_player.stop();
-
-                m_alarmRinging = Settings::AlarmMode::Off;
-            }
-        }
-        else if (hourlyChimeActive() && m_clock.get().tm_min == 0 && m_clock.get().tm_sec == 0)
-        {
-            TRACE << "Hourly chime";
-            if (m_settings.get().hourlyChimeMode == Settings::HourlyChimeMode::Beep ||
-                m_settings.get().hourlyChimeMode == Settings::HourlyChimeMode::BeepOnDayLight)
-            {
-                m_buzzer.beepForMs(100);
-            } else
-            {
-                playChimeSound();
-            }
-        }
-
-        // Autoscroll if enabled, not editing something, the user is in the root menu and has not 
-        // touched any button for a while.
-        m_secondsWithoutUserInput++;
-        if (m_settings.get().autoScroll && 
-            m_editedValueIndex == NoEditing && 
-            m_currentMenu == &m_rootMenu &&
-            m_secondsWithoutUserInput >= AUTO_SCROLL_DELAY_SEC)
-        {
-            switch(m_clock.get().tm_sec)
-            {
-                case 0:
-                    m_curFuncIdx = m_lastUsedTimeFunction;
-                    startVertScrolling(-1);
-                    break;
-
-                case AUTO_SCROLL_DELAY_SEC:
-                    m_curFuncIdx = m_dateFuncIdx;
-                    startVertScrolling(-1);
-                    break;
-
-                case AUTO_SCROLL_DELAY_SEC * 2:
-                    // Show the temperature if the RTC is available, otherwise go back to time.
-                    if (m_clock.rtc() != nullptr)
-                       m_curFuncIdx = m_temperatureFuncIdx;
-                    else
-                        m_curFuncIdx = m_lastUsedTimeFunction;
-
-                    startVertScrolling(-1);
-                    break;
-            }
-        }
-    }
+        onSecond();
 
     handleControlFromConsole();
     renderFrame();
-    // TODO: make method shorter
+}
+
+void ClockUi::onSecond()
+{
+    if (m_alarmRinging != Settings::AlarmMode::Off)
+    {
+        m_ringingForSecs++;
+        
+        switch (m_alarmRinging)
+        {
+            case Settings::AlarmMode::Gradual:
+                m_buzzer.beepForMs(m_ringingForSecs);
+                break;
+            case Settings::AlarmMode::Loud:
+                m_buzzer.beepForMs(500);
+                break;
+        }
+
+        if (m_ringingForSecs > STOP_RINGING_AFTER_SEC)
+        {
+            if (m_alarmRinging == Settings::AlarmMode::Music)
+                m_player.stop();
+
+            m_alarmRinging = Settings::AlarmMode::Off;
+        }
+    }
+    else if (hourlyChimeActive() && m_clock.get().tm_min == 0 && m_clock.get().tm_sec == 0)
+    {
+        TRACE << "Hourly chime";
+        if (m_settings.get().hourlyChimeMode == Settings::HourlyChimeMode::Beep ||
+            m_settings.get().hourlyChimeMode == Settings::HourlyChimeMode::BeepOnDayLight)
+        {
+            m_buzzer.beepForMs(100);
+        } else
+        {
+            playChimeSound();
+        }
+    }
+
+    // Autoscroll if enabled, not editing something, the user is in the root menu and has not 
+    // touched any button for a while.
+    m_secondsWithoutUserInput++;
+    if (m_settings.get().autoScroll && 
+        m_editedValueIndex == NoEditing && 
+        m_currentMenu == &m_rootMenu &&
+        m_secondsWithoutUserInput >= AUTO_SCROLL_DELAY_SEC)
+    {
+        switch(m_clock.get().tm_sec)
+        {
+            case 0:
+                m_curFuncIdx = m_lastUsedTimeFunction;
+                startVertScrolling(-1);
+                break;
+
+            case AUTO_SCROLL_DELAY_SEC:
+                m_curFuncIdx = m_dateFuncIdx;
+                startVertScrolling(-1);
+                break;
+
+            case AUTO_SCROLL_DELAY_SEC * 2:
+                // Show the temperature if the RTC is available, otherwise go back to time.
+                if (m_clock.rtc() != nullptr)
+                    m_curFuncIdx = m_temperatureFuncIdx;
+                else
+                    m_curFuncIdx = m_lastUsedTimeFunction;
+
+                startVertScrolling(-1);
+                break;
+        }
+    }
 }
 
 void ClockUi::playChimeSound()
