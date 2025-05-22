@@ -34,38 +34,19 @@ void Options::renderFrame(Bitmap &frame, int editedValueIndex, int blinkingCount
             break;
         case EditingDateFormat:
         {
-            int formatTextId = 
-                static_cast<int>(TextId::MonthDashDay) + static_cast<int>(settings().dateFormat);
             renderScrollingText(
                 frame, 
                 fullRefresh, 
                 uiText(TextId::DateFormatColon), 
-                uiText(static_cast<TextId>(formatTextId)));
+                uiText(settings().dateFormat));
             break;
         }
         case EditingHourlyChimeMode:
-            TextId modeTextId;
-            switch(settings().hourlyChimeMode)
-            {
-                // TODO: metaprogram to map from Settings::HourlySoundMode to TextId
-                case Settings::HourlyChimeMode::Off:
-                    modeTextId = TextId::Off;
-                    break;
-                case Settings::HourlyChimeMode::Beep:
-                    modeTextId = TextId::Beep;
-                    break;
-                case Settings::HourlyChimeMode::BeepOnDayLight:
-                    modeTextId = TextId::BeepOnDayLight;
-                    break;
-                case Settings::HourlyChimeMode::Sound:
-                    modeTextId = TextId::Sound;
-                    break;
-                case Settings::HourlyChimeMode::SoundOnDayLight:
-                    modeTextId = TextId::SoundOnDayLight;
-                    break;
-            }
             renderScrollingText(
-                frame, fullRefresh, uiText(TextId::HourlyChimeColon), uiText(modeTextId));
+                frame, 
+                fullRefresh, 
+                uiText(TextId::HourlyChimeColon), 
+                uiText(settings().hourlyChimeMode));
             break;
         case EditingChimeVolume:
             renderScrollingText(

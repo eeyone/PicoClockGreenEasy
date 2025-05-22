@@ -6,33 +6,6 @@
 #include "Clock.h"
 #include "PicoClockHw/Player.h"
 
-namespace
-{
-    std::string alarmModeText(const Settings::Alarm &alarm)
-    {
-        TextId textId;
-        switch(alarm.mode)
-        {
-            // Todo: find a way to avoid such mapping switches and casts between enums
-            case Settings::AlarmMode::Off:   
-                textId = TextId::Off;
-                break;
-            case Settings::AlarmMode::Loud:   
-                textId = TextId::Loud;
-                break;
-            case Settings::AlarmMode::Gradual:
-                textId = TextId::Gradual;
-                break;
-            case Settings::AlarmMode::Music:
-                textId = TextId::Music;
-                break;
-            default:
-                return "";
-        }
-        return uiText(textId);
-    }
-}
-
 void Alarm::renderFrame(
     Bitmap &frame, int editedValueIndex, int blinkingCounter, bool fullRefresh)
 {
@@ -69,7 +42,7 @@ void Alarm::renderFrame(
             }
             break;
         case EditingAlarmMode:
-            renderScrollingText(frame, fullRefresh, prefix, alarmModeText(alarm));
+            renderScrollingText(frame, fullRefresh, prefix, uiText(alarm.mode));
             break;
         case EditingAlarmVolume:
             renderScrollingText(

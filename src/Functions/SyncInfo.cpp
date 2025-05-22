@@ -19,9 +19,7 @@ void SyncInfo::renderFrame(
 {
     Clock::SyncInfo info;
     clock().syncInfo(info);
-    std::string sourceText = 
-    uiText(static_cast<TextId>(
-        static_cast<int>(TextId::Rtc) + static_cast<int>(info.lastSyncSource)));
+    std::string sourceText = uiText(info.lastSyncSource);
 
     std::string text;
     bool morning;

@@ -12,6 +12,6 @@ void WifiStatus::renderFrame(Bitmap &frame, int editedValueIndex, int blinkingCo
 {
     std::string text = 
         uiText(TextId::WifiColon) + 
-        uiText(static_cast<TextId>(static_cast<int>(TextId::Unknown) + static_cast<int>(Wifi::linkStatus())));
+        uiText(Wifi::linkStatus());
     renderScrollingText(frame, fullRefresh, text);
 }

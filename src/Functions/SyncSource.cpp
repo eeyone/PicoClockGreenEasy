@@ -4,9 +4,7 @@
 void SyncSource::renderFrame(
     Bitmap &frame, int editedValueIndex, int blinkingCounter, bool fullRefresh)
 {
-    std::string source = 
-        uiText(static_cast<TextId>(
-            static_cast<int>(TextId::Rtc) + static_cast<int>(settings().syncSource)));
+    std::string source = uiText(settings().syncSource);
     if (editedValueIndex == 0)
         renderScrollingText(frame, fullRefresh, uiText(TextId::SourceColon) + source);
     else

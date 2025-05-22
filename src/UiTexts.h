@@ -18,25 +18,10 @@ enum class TextId
     Options,
     Exit,
 
-    // Wifi status. These ids must match those in Wifi::Status
-    Unknown,
-    OK,
-    NotAvailable,
-    Down,
-    Connecting,
-    NoIp,
-    Connected,
-    ConnectionFailed,
-    NoNetworkFound,
-    AuthenticationFailed,
-
-    // For alarms
+    // Alarms
     NextColon,
     AlarmShortened1Colon,
     AlarmShortened2Colon,
-    Loud,
-    Gradual,
-    Music,
     VolumeColon,
     TrackColon,
     Random,
@@ -44,7 +29,7 @@ enum class TextId
     Once,
     Weekly,
 
-    // For options
+    // Options
     AutoLightColon,
     TimeFormatColon,
     Format24h,
@@ -58,10 +43,6 @@ enum class TextId
     BrightnessBrightColon,
     On,
     Off,
-    Beep,
-    BeepOnDayLight,
-    Sound,
-    SoundOnDayLight,
     ChimeVolumeColon,
 
     // Tools menu, stopwatch and countdown
@@ -71,13 +52,6 @@ enum class TextId
     Countdown,
     Set,
 
-    // Date formats. Must match the order of Settings::DateFormat.
-    MonthDashDay,
-    MonthSlashDay,
-    DayDashMonth,
-    DaySlashMonth,
-    DayDotMonth,
-
     // Sync menu
     SourceColon,
     SyncNow,
@@ -86,12 +60,15 @@ enum class TextId
     LastDriftColon,
     WifiColon,
 
-    // Sync source. Must match Settings::SyncSource
-    Rtc,
-    Ntp,
-    Gps,
-
-    TextCount
+    Count
 };
 
-std::string uiText(TextId id);
+template <typename Enum>
+extern const char *g_textTable[][LanguageCount];
+
+// Return the text associated with the given enum item in the current language. A table for the enum
+// must be defined in UiTexts.cpp.
+template <typename Enum> std::string uiText(Enum id)
+{
+    return g_textTable<Enum>[static_cast<unsigned int>(id)][LANGUAGE];
+}
