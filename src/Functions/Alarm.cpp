@@ -159,7 +159,10 @@ void Alarm::modifyValue(int valueIndex, Direction direction)
     switch(valueIndex)
     {
     case EditingAlarmMode:
-        adjustEnum(modifyAlarmSettings().mode, direction);
+        do {
+            adjustEnum(modifyAlarmSettings().mode, direction);
+            // Do not allow selecting "music" if no player module is detected.
+        } while (alarmSettings().mode == Settings::AlarmMode::Music && !player().detected());
         break;
 
     case EditingAlarmVolume:

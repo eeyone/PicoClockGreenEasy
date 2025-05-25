@@ -130,8 +130,12 @@ void Options::modifyValue(int valueIndex, Direction direction)
             break;
 
         case EditingHourlyChimeMode:
-            adjustEnum(modifySettings().hourlyChimeMode, direction);
-            // TODO: Do no offer sound if no player was detected
+            do {
+                adjustEnum(modifySettings().hourlyChimeMode, direction);
+                // Do not allow selecting "sound effect" if no player module is detected.
+            } while ((settings().hourlyChimeMode == Settings::HourlyChimeMode::Sound ||
+                     settings().hourlyChimeMode == Settings::HourlyChimeMode::SoundOnDayLight) &&
+                    !player().detected());
             break;
 
         case EditingChimeVolume:

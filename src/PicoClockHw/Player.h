@@ -22,6 +22,7 @@ public:
 
     Player();
     ~Player();
+    bool detected() const;
     void setVolume(int volume); // Volume from 0 to MAX_VOLUME
     void playTrack(int track);
     void playTrackInFolder(int track, int folder);
@@ -43,6 +44,7 @@ private:
     void sendQueuedMessage();
 
     static Player *m_instance;
+    bool m_detected = false;
     std::vector<uint8_t> m_receiveBuffer;
     Timer m_rxTimeoutTimer;
     std::function<void(PlaybackStatus)> m_statusCallback;

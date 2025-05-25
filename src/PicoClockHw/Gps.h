@@ -13,6 +13,7 @@ public:
     Gps();
     ~Gps();
     void setEnabled(bool enabled);
+    bool detected() const;
     void setTimeCallback(std::function<void(time_t utcTime, uint32_t ms)> c)
     {
         m_timeCallback = c;
@@ -35,6 +36,7 @@ private:
     void setBackupMode(bool backupMode);
 
     static Gps *m_instance;
+    bool m_detected = false;
     bool m_enabled = false;
     std::string g_receiveBuffer; // Not printable if the message is an UBX one
     std::function<void(time_t utcTime, uint32_t ms)> m_timeCallback;

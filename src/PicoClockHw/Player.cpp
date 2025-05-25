@@ -23,6 +23,7 @@ Player *Player::m_instance = nullptr;
 
 Player::Player()
 {
+    assert(m_instance == nullptr); 
     m_instance = this;
 
     uart_init(PLAYER_UART, 9600);
@@ -40,6 +41,9 @@ Player::Player()
 
     // Enable the UART to send interrupts on reception
     uart_set_irq_enables(PLAYER_UART, true/*has data*/, false/*needs data*/);
+
+    // Query the status of the player to see if it is online so that m_detected will be set.
+    queryStatus(nullptr); 
 }
 
 Player::~Player()
@@ -52,8 +56,15 @@ Player::~Player()
     m_instance = nullptr;
 }
 
+bool Player::detected() const
+{
+    TRACE << "Player detected:" << m_detected;
+    return m_detected;
+}
+
 void Player::onUartRx()
 {
+    TRACE << "DF Player UART RX interrupt";
     while (uart_is_readable(PLAYER_UART)) 
     {
         uint8_t c = uart_getc(PLAYER_UART);
@@ -61,6 +72,10 @@ void Player::onUartRx()
 
         if (m_receiveBuffer.size() >= 10) // End of message
         {
+            // Now that a message is received, the player module is considered detected. (if the
+            // module is not present, one zero byte is still received)
+            m_detected = true;
+
             m_rxTimeoutTimer.stop();
             onMsgEnd();
             m_receiveBuffer.clear();

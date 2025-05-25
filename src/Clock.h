@@ -39,6 +39,10 @@ public:
     {
         m_rtcSync = SyncingToRtc;
     }
+    bool gpsDetected() const
+    {
+        return m_gps.detected();
+    }
     
     void tick(bool &clockAdjusted, Settings::AlarmMode &reachedAlarmMode, AlarmId &reachedAlarmId);
     bool nextAlarm(int &weekday, int &hour, int &min) const;

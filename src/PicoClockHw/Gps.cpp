@@ -88,6 +88,11 @@ void Gps::setEnabled(bool enabled)
     }
 }
 
+bool Gps::detected() const
+{
+    return m_detected; 
+}
+
 void Gps::resetTimeoutAlarm()
 {
     m_timeoutAlarm.stop();
@@ -114,6 +119,7 @@ void Gps::onUartRx()
             case 10: // LR: ignore
                 break;
             case 13: // CR: Handle the received line
+                m_detected = true;
                 TRACE << g_receiveBuffer;
                 onNmeaMessage(g_receiveBuffer);
                 g_receiveBuffer.clear();
