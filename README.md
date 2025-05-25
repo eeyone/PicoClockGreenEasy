@@ -204,13 +204,13 @@ With auto light, the brightness is automatically adjusted depending on the ambie
 - press "set"
 - go to a not-so-dark room (or turn on the light) and use the "up" or "down" buttons to set the "dim brightness" percentage
 - press "set"
-- if you need to adjust the brightness in a daylight conditions, you can use the "up" or "down" buttons to set the "max brightness" percentage
+- if you need to adjust the brightness in daylight conditions, you can use the "up" or "down" buttons to set the "max brightness" percentage
 - press "set"
 
 
 ## Using a DFPlayer Mini module for music and chime sound
 
-If you don't like the beeps produced by the internal buzzer for alarms and hourly chimes, you can connect a DFPlayer Mini module or one of its clone (I used the MP3-TF-16P) and configure the firmware to play WAV or MP3 files instead.
+If, like me, you don't like the beeps produced by the internal buzzer for alarms and hourly chimes, you can connect a DFPlayer Mini module or one of its clones (I used the MP3-TF-16P) and configure the firmware to play WAV or MP3 files instead.
 
 Here is the pin wiring I have used:
 |[DFPlayer Mini module](https://wiki.dfrobot.com/DFPlayer_Mini_SKU_DFR0299#target_3)|Pico|
@@ -226,6 +226,6 @@ These other pins can be connected to a small speaker that fits in the Pico Green
 |SPK_1               |+      |
 |SPK_2               |-      |
 
-Place the WAV or MP3 files to use as alarm on the root of a micro SD card, and insert it in the DFPlayer Mini. Then, set the mode of an alarm to "Music". For a given alarm, you can also set the volume and the track to use, or set the track it to random.
+Place the WAV or MP3 files to use as alarms on the root of a micro SD card, and insert it in the DFPlayer Mini. Then, set the mode of an alarm to "Music". For a given alarm, you can also set the volume and the track to use, or set the track to random.
 
-Place the WAV or MP3 file to use as hourly chime in a folder called "01" on a micro SD card, and insert it in the DFPlayer Mini. Then, activate this sound by setting "Hourly chime" to "Sound effect" or "If day: Sound effect" in the "Options" menu item.
+Place the WAV or MP3 file to use as the hourly chime in a folder called "01" on a micro SD card, and insert it in the DFPlayer Mini. Then, activate this sound by setting "Hourly chime" to "Sound effect" or "If day: Sound effect" in the "Options" menu item.
