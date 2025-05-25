@@ -17,6 +17,45 @@
 namespace
 {
     const auto PLAYER_UART = uart1;
+
+    std::string hexDump(const uint8_t *byteArray, size_t size)
+    {
+        std::ostringstream stream;
+        stream << std::uppercase << std::hex;
+        for (size_t i = 0; i < size; i++)
+        {
+            stream  << std::setfill('0') << std::setw(2) << (int)byteArray[i] << " ";
+        }
+        return stream.str();
+    }
+
+    std::string hexDump(const std::vector<uint8_t> &data)
+    {
+        return hexDump(data.data(), data.size());
+    }
+
+    template <size_t size>
+    std::string hexDump(const uint8_t (&byteArray)[size])
+    {
+        return hexDump(byteArray, size);
+    }
+
+    Player::PlaybackStatus byteToStatus(int param)
+    {
+        switch(param & 255)
+        {
+            case 0x01:
+                return Player::PlaybackStatus::Playing;
+            case 0x02:
+                return Player::PlaybackStatus::Paused;
+            case 0x00:
+                return Player::PlaybackStatus::Stopped;
+            case 0x08:
+                return Player::PlaybackStatus::Sleeping;
+            default:
+                return Player::PlaybackStatus::Unknown;
+        }
+    }
 }
 
 Player *Player::m_instance = nullptr;
@@ -64,7 +103,6 @@ bool Player::detected() const
 
 void Player::onUartRx()
 {
-    TRACE << "DF Player UART RX interrupt";
     while (uart_is_readable(PLAYER_UART)) 
     {
         uint8_t c = uart_getc(PLAYER_UART);
@@ -88,29 +126,112 @@ void Player::onUartRx()
 
 void Player::onRxTimeout()
 {
-    // TODO: move this and other similar snippets to Trace()
-#ifdef TRACE_TO_STDIO
-    std::ostringstream stream;
-    stream << std::uppercase << std::hex;
-    for (auto c : m_receiveBuffer)
-        stream  << std::setfill('0') << std::setw(2) << (int)c << " ";
-#endif
-
-    TRACE << "Timeout waiting for end of message. Received so far:" << stream.str();
+    TRACE << "Timeout waiting for end of message. Received so far:" << hexDump(m_receiveBuffer);
 
     m_receiveBuffer.clear();
 }
 
+std::string Player::receivedCommandAsText() const
+{
+    int param = m_receiveBuffer[5] << 8 | m_receiveBuffer[6];
+    switch(m_receiveBuffer[3])
+    {
+        case 0x3A: // storage device is plugged in
+            switch(param)
+            {
+                case 0x01:
+                    return "USB flash drive plugged in";
+                case 0x02:
+                    return "SD card plugged in";
+                default:
+                    return "Unknown storage device plugged in" + std::to_string(param);
+            }
+            break;
+        case 0x3B: // storage device was unplugged
+            switch(param)
+            {
+                case 0x01:
+                    return "USB flash drive unplugged";
+                case 0x02:
+                    return "SD card unplugged";
+                default:
+                    return "Unknown storage device plugged out" + std::to_string(param);
+            }
+        case 0x3D: // Track finished playing
+            return "Track #" + std::to_string(param) + " finished playing";
+        case 0x3F: // Storage device
+            switch(param)
+            {
+                case 0x00:
+                    return "No storage device";
+                case 0x01:
+                    return "Storage device is USB";
+                case 0x02:
+                    return "Storage device is SD";
+                default:
+                    return "Unknown storage device" + std::to_string(param);
+            }
+            break;
+        case 0x40: // Error
+            switch(param)
+            {
+                case 0x01:
+                    return "Error: module busy";
+                case 0x02:
+                    return "Error: Currently in sleep mode";
+                case 0x03:
+                    return "Error: Serial receiving error";
+                case 0x04:
+                    return "Error: Checksum incorrect";
+                case 0x05:
+                    return "Error: Specified track is out of current track scope";
+                case 0x06:
+                    return "Error: Specified track is not found";
+                case 0x07:
+                    return "Error: Insertion error";
+                case 0x08:
+                    return "Error: SD card reading failed";
+                case 0x0A:
+                    return "Error: Entered into sleep mode";
+                default:
+                    return "Unknown error" + std::to_string(param);
+            }
+        case 0x41: 
+            return "Command acknowledged";
+        case 0x42:
+        {
+            switch(param & 255)
+            {
+                case 0x01:
+                    return "Current status: playing";
+                case 0x02:
+                    return "Current status: paused";
+                case 0x00:
+                    return "Current status: Playback finished";
+                case 0x08:
+                    return "No device online or sleeping";
+                default:
+                    return "Unknown current status:" + std::to_string(param);
+            }
+        }
+        case 0x43:
+            return "Current volume:" + std::to_string(param);
+        case 0x48:
+            return "Number of tracks in the root of micro SD card: " + std::to_string(param);
+        case 0x4C:
+            return "Number of folders in the root of micro SD card: " + std::to_string(param);
+        default:
+            return "Unknown message with command code " 
+                + std::to_string(m_receiveBuffer[3])
+                + "and parameter" 
+                + std::to_string(param);
+    }
+}
+
 void Player::onMsgEnd()
 {
-#if 0 // Code to dump the message as hex codes
-    std::ostringstream stream;
-    stream << std::uppercase << std::hex;
-    for (auto c : m_receiveBuffer)
-    {
-        stream  << std::setfill('0') << std::setw(2) << (int)c << " ";
-    }
-    TRACE  <<"Received message:" << stream.str();
+#if 1 // Code to dump the message as hex codes
+    TRACE  <<"Received message:" << hexDump(m_receiveBuffer);
 #endif
 
     if (m_receiveBuffer.size() != 10 || 
@@ -123,147 +244,28 @@ void Player::onMsgEnd()
         return;
     }
 
-    int param = m_receiveBuffer[5] << 8 | m_receiveBuffer[6];
+    TRACE << "Meaning:" << receivedCommandAsText();
 
+    int param = m_receiveBuffer[5] << 8 | m_receiveBuffer[6];
     switch(m_receiveBuffer[3])
     {
-        case 0x3A: // storage device is plugged in
-            switch(param)
-            {
-                case 0x01:
-                    TRACE << "USB flash drive plugged in";
-                    break;
-                case 0x02:
-                    TRACE << "SD card plugged in";
-                    break;
-                default:
-                    TRACE << "Unknown storage device plugged in" << param;
-            }
-            break;
-        case 0x3B: // storage device was unplugged
-            switch(param)
-            {
-                case 0x01:
-                    TRACE << "USB flash drive unplugged";
-                    break;
-                case 0x02:
-                    TRACE << "SD card unplugged";
-                    break;
-                default:
-                    TRACE << "Unknown storage device plugged out" << param;
-            }
-            break;
-        case 0x3D: // Track finished playing
-            TRACE << "Track #" <<param <<"finished playing";
-            break;
-        case 0x3F: // Storage device
-            switch(param)
-            {
-                case 0x00:
-                    TRACE << "No storage device";
-                    break;
-                case 0x01:
-                    TRACE << "Storage device is USB";
-                    break;
-                case 0x02:
-                    TRACE << "Storage device is SD";
-                    break;
-                default:
-                    TRACE << "Unknown storage device" << param;
-            }
-            break;
-        case 0x40: // Error
-            switch(param)
-            {
-                case 0x01:
-                    TRACE << "Error: module busy";
-                    break;
-                case 0x02:
-                    TRACE << "Error: Currently in sleep mode";
-                    break;
-                case 0x03:
-                    TRACE << "Error: Serial receiving error";
-                    break;
-                case 0x04:
-                    TRACE << "Error: Checksum incorrect";
-                    break;
-                case 0x05:
-                    TRACE << "Error: Specified track is out of current track scope";
-                    break;
-                case 0x06:
-                    TRACE << "Error: Specified track is not found";
-                    break;
-                case 0x07:
-                    TRACE << "Error: Insertion error";
-                    break;
-                case 0x08:
-                    TRACE << "Error: SD card reading failed";
-                    break;
-                case 0x0A:
-                    TRACE << "Error: Entered into sleep mode";
-                    break;
-// TODO: method too long, refactor it
-                default:
-                    TRACE << "Unknown error" << param;
-            }
-            break;
-        case 0x41: 
-            TRACE << "Command acknowledged";
-//            sendQueuedMessage();
-            break;
-        case 0x42:
+        case 0x42: // Status response
         {
-            PlaybackStatus status = PlaybackStatus::Unknown;
-            switch(param & 255)
-            {
-                case 0x01:
-                    TRACE << "Current status: playing";
-                    status = PlaybackStatus::Playing;
-                    break;
-                case 0x02:
-                    TRACE << "Current status: paused";
-                    status = PlaybackStatus::Paused;
-                    break;
-                case 0x00:
-                    TRACE << "Current status: Playback finished";
-                    status = PlaybackStatus::Stopped;
-                    break;
-                case 0x08:
-                    TRACE << "No device online or sleeping";
-                    status = PlaybackStatus::Sleeping;
-                    break;
-                default:
-                    TRACE << "Unknown current status:" << param;
-            }
-
+            PlaybackStatus status = byteToStatus(m_receiveBuffer[6]);
             if (status != PlaybackStatus::Unknown && m_statusCallback)
             {
                 m_statusCallback(status);
                 m_statusCallback = nullptr;
             }
-
             break;
         }
-        case 0x43:
-            TRACE << "Current volume:" << param;
-            break;
-        case 0x48:
-            TRACE << "Number of tracks in the root of micro SD card:" << param;
+        case 0x48: // Number of tracks in the root of micro SD card
             if (m_trackCountCallback)
             {
                 m_trackCountCallback(param);
                 m_trackCountCallback = nullptr;
             }
             break;
-        case 0x4C:
-            TRACE << "Number of folders in the root of micro SD card:" << param;
-            break;
-        default:
-            TRACE << "Unknown message with command code" 
-                << std::uppercase << std::hex
-                << (int)m_receiveBuffer[3] 
-                << "and parameter" 
-                << param;
     }
 }
 
@@ -306,15 +308,7 @@ void Player::sendCommand(uint8_t command, uint8_t param1, uint8_t param2)
     msg[7] = checksum >> 8; // High byte
     msg[8] = checksum & 0xFF; // Low byte
 
-#ifdef TRACE_TO_STDIO
-    std::ostringstream stream;
-    stream << std::uppercase << std::hex;
-    for (auto c : msg)
-    {
-        stream  << std::setfill('0') << std::setw(2) << (int)c << " ";
-    }
-    TRACE  <<"Send message:" << stream.str();
-#endif
+    TRACE  <<"Send message:" << hexDump(msg);
 
     uart_write_blocking(PLAYER_UART, msg, sizeof(msg));
 }

@@ -5,6 +5,7 @@
 #include "hardware/uart.h"
 #include <vector>
 #include <functional>
+#include <string>
 
 class Player 
 {
@@ -42,6 +43,7 @@ private:
     void onMsgEnd();
     void sendCommand(uint8_t command, uint8_t param1, uint8_t param2);
     void sendQueuedMessage();
+    std::string receivedCommandAsText() const;
 
     static Player *m_instance;
     bool m_detected = false;
