@@ -125,7 +125,6 @@ protected:
     Buzzer &buzzer();
     Player &player();
     Display &display();
-    void playChimeSound();
     void playAlarmMusic(Clock::AlarmId alarmId);
 
 private:

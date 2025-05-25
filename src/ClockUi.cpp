@@ -209,7 +209,8 @@ void ClockUi::onSecond()
             m_buzzer.beepForMs(100);
         } else
         {
-            playChimeSound();
+            m_player.setVolume(m_settings.get().chimeSoundVolume);
+            m_player.playTrackInFolder(1, 1);
         }
     }
 
@@ -244,12 +245,6 @@ void ClockUi::onSecond()
                 break;
         }
     }
-}
-
-void ClockUi::playChimeSound()
-{
-    m_player.setVolume(m_settings.get().chimeSoundVolume);
-    m_player.playTrackInFolder(1, 1);
 }
 
 void ClockUi::renderFrame()

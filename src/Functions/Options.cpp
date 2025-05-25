@@ -141,10 +141,18 @@ void Options::modifyValue(int valueIndex, Direction direction)
         case EditingChimeVolume:
             adjustField(
                 direction, PlayerVolume, modifySettings().chimeSoundVolume, Player::MAX_VOLUME);
-            playChimeSound();
+
+            player().setVolume(settings().chimeSoundVolume);
+
+            // Start playing sound if not playing yet (deferred in the lambda expression as the answer 
+            // from the module is needed)
+            player().queryStatus([this](Player::PlaybackStatus status)
+                {
+                    if (status != Player::Playing)
+                        player().playTrackInFolder(1, 1); 
+                });
+
             // TODO: check if it makes sense to put the player in sleep mode after editing volume
-            // TODO: as the DFPlayer seemed to have crashed after restarting the chime sound 
-            // repeatedly, try starting the sound only if it's not playing yet.
             break;
 
         case EditingAutoLight:

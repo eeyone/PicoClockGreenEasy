@@ -88,7 +88,6 @@ private:
 
     void onFrameCallback();
     void onSecond();
-    void playChimeSound();
     void playAlarmMusic(Clock::AlarmId alarmId);
     void renderFrame();
     void onSetButtonPressed();

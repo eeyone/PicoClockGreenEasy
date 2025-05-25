@@ -231,11 +231,6 @@ Display &AbstractFunction::display()
     return m_clockUi->m_display;
 }
 
-void AbstractFunction::playChimeSound()
-{
-    m_clockUi->playChimeSound();
-}
-
 void AbstractFunction::playAlarmMusic(Clock::AlarmId alarmId)
 {
     m_clockUi->playAlarmMusic(alarmId);
