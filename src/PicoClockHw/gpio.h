@@ -1,5 +1,8 @@
 #pragma once
 
+#include <hardware/gpio.h>
+#include <hardware/uart.h>
+
 enum Gpio
 {
     GPS_TX = 0,     // Output (optional): UART transmission to the GPS module
@@ -21,3 +24,11 @@ enum Gpio
     A2 = 22,        // Output: address line 2 for LED matrix controller
     AIN = 26        // Input:  ambient light sensor
 };
+
+struct uart_inst;
+
+// Return the interrupt for one of the two available UARTs
+inline int uartIrq(const uart_inst *uart)
+{
+    return uart == uart0 ? UART0_IRQ : UART1_IRQ;
+}

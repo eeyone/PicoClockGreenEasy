@@ -69,14 +69,10 @@ Player::Player()
     gpio_set_function(PLAYER_TX, GPIO_FUNC_UART);
     gpio_set_function(PLAYER_RX, GPIO_FUNC_UART);
 
-    // TODO: centralize this in a common place, as Gps.cpp has similar code
-    // Select correct interrupt for the UART we are using
-    const int UART_IRQ = PLAYER_UART == uart0 ? UART0_IRQ : UART1_IRQ;
-
     // Set up and enable the interrupt handler
     MAKE_TRAMPOLINE(Player, onUartRx, singleton);
-    irq_set_exclusive_handler(UART_IRQ, onUartRx);
-    irq_set_enabled(UART_IRQ, true);        
+    irq_set_exclusive_handler(uartIrq(PLAYER_UART), onUartRx);
+    irq_set_enabled(uartIrq(PLAYER_UART), true);        
 
     // Enable the UART to send interrupts on reception
     uart_set_irq_enables(PLAYER_UART, true/*has data*/, false/*needs data*/);
@@ -88,8 +84,7 @@ Player::Player()
 Player::~Player()
 {
     uart_set_irq_enables(PLAYER_UART, false/*has data*/, false/*needs data*/);
-    const int UART_IRQ = PLAYER_UART == uart0 ? UART0_IRQ : UART1_IRQ;
-    irq_set_enabled(UART_IRQ, false);
+    irq_set_enabled(uartIrq(PLAYER_UART), false);
 
     uart_deinit(PLAYER_UART);
     m_instance = nullptr;
