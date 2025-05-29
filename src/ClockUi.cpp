@@ -107,7 +107,8 @@ ClockUi::ClockUi() : m_clock(Display::FRAME_RATE, m_settings)
 
     // Setup display and turn it on
     m_frameBuffer.setDrawOrigin(Display::MATRIX_LEFT, Display::MATRIX_TOP);
-    adjustBrightness();
+    considerAmbientLight();
+    considerManualBrightness();
 
     TRACE << "Constructed";
 }
@@ -167,7 +168,7 @@ void ClockUi::onFrameCallback()
         }
     }
 
-    adjustBrightness();
+    considerAmbientLight();
 
     if (m_clock.tickCount() == 0)
         onSecond();
@@ -431,14 +432,13 @@ bool ClockUi::hourlyChimeActive() const
     return false;
 }
 
-void ClockUi::adjustBrightness()
+void ClockUi::considerAmbientLight()
 {
     if (m_currentMenu->at(m_curFuncIdx)->brightnessHandling(m_editedValueIndex) == 
         AbstractFunction::NoBrightnessHandling)
         return;
 
     float ambientLight = m_display.ambientLight();
-
     m_dayLight = ambientLight >= DIM_AMBIENT_LIGHT;
 
     if (m_settings.get().autoLight)
@@ -466,11 +466,13 @@ void ClockUi::adjustBrightness()
         }
             
         m_display.setBrightness(brightness);
-    } else
-    {
-        // TODO: do not continuously set the brightness
-        m_display.setBrightness(m_settings.get().manualBrightness);
     }
+}
+
+void ClockUi::considerManualBrightness()
+{
+    if (!m_settings.get().autoLight)
+        m_display.setBrightness(m_settings.get().manualBrightness);
 }
 
 void ClockUi::renderHorizScrollingText(

@@ -126,6 +126,7 @@ protected:
     Player &player();
     Display &display();
     void playAlarmMusic(Clock::AlarmId alarmId);
+    void considerManualBrightness();
 
 private:
     ClockUi *m_clockUi = nullptr;

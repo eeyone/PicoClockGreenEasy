@@ -105,7 +105,8 @@ private:
     void bringHorizScrollingToRight();
     void startVertScrolling(int dir);
     bool hourlyChimeActive() const;
-    void adjustBrightness();
+    void considerAmbientLight();
+    void considerManualBrightness();
     void handleControlFromConsole();
     void renderIndicators();
 };

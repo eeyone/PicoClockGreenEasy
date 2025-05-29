@@ -157,13 +157,17 @@ void Options::modifyValue(int valueIndex, Direction direction)
 
         case EditingAutoLight:
             toggleBool(modifySettings().autoLight);
+            considerManualBrightness();
             break;
 
         case EditingManualBrightness:
             if (settings().autoLight)
                 adjustField(direction, AutoBrightnessPoint, modifySettings().brightnessDark);
             else
+            {
                 adjustField(direction, ManualBrightness, modifySettings().manualBrightness);
+                considerManualBrightness();
+            }
             break;
 
         case EditingBrightnessDim:

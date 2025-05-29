@@ -77,13 +77,22 @@ public:
         bool useCelsius = true;
         bool format24h = true;
         HourlyChimeMode hourlyChimeMode = HourlyChimeMode::Off; 
+        
+        // Determines if the brightness is automatically adjusted based on ambient light. Changing 
+        // this requires a call to considerManualBrightness() in case the display brightness needs
+        // to be updated.
         bool autoLight = true; 
+        
         Alarm alarm1;
         Alarm alarm2;
         bool skipNextAlarm = false;
         int countdownStartMin = 1;
         int countdownStartSec = 0;
+
+        // Brightness when autoLight is disabled. This is not considered continuously for the 
+        // display brightness, so considerManualBrightness() needs to be called after changing it.
         int manualBrightness = 100;
+
         int brightnessDark = -20;
         int brightnessDim = 55;
         int brightnessBright = 100;

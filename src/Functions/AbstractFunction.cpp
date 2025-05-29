@@ -235,3 +235,8 @@ void AbstractFunction::playAlarmMusic(Clock::AlarmId alarmId)
 {
     m_clockUi->playAlarmMusic(alarmId);
 }
+
+void AbstractFunction::considerManualBrightness()
+{
+    m_clockUi->considerManualBrightness();
+}
