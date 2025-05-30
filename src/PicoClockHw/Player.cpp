@@ -2,9 +2,6 @@
 // https://www.electronicoscaldas.com/datasheet/DFR0299-DFPlayer-Mini-Manual.pdf?srsltid=AfmBOoq-OtiGXRcKGhYnv_vwpQqS3vaBDtOVyyfwmSWj7EP0cMv1CriK
 // http://www.trainelectronics.com/Arduino/MP3Sound/TalkingTemperature/FN-M16P%20Embedded%20MP3%20Audio%20Module%20Datasheet.pdf
 
-// TODO: check power consumption of the module and if it is reduced by entering standby mode using
-// command 0x0A. 
-
 #include "Player.h"
 #include "gpio.h"
 #include "Utils/Trace.h"

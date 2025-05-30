@@ -18,15 +18,14 @@ private:
         EditingTimeFormat,
         EditingDateFormat,
         EditingHourlyChimeMode,
-        EditingChimeVolume,
+        EditingChimeVolume, // Only if hourly chime mode is set to "Sound" or "SoundOnDayLight"
         EditingAutoLight,
 
         // Value to edit if auto light is disabled
         EditingManualBrightness,
         
         // Values to edit if auto light is enabled
-        // TODO: use isValueAvailable instead
-        EditingBrightnessDark = EditingManualBrightness, 
+        EditingBrightnessDark, 
         EditingBrightnessDim,
         EditingBrightnessBright,
 
@@ -34,7 +33,10 @@ private:
     };
 
     void renderFrame(Bitmap &frame, int editedValueIndex, int blinkingCounter, bool fullRefresh) override;
-    int valueCount() const override;
+    int valueCount() const override
+    {
+        return ValueCount;
+    }
     bool isValueAvailable(int valueIndex) const override;
     void modifyValue(int valueIndex, Direction direction) override;
 

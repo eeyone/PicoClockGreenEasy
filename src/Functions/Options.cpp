@@ -63,21 +63,18 @@ void Options::renderFrame(Bitmap &frame, int editedValueIndex, int blinkingCount
                 settings().autoLight ? uiText(TextId::On) : uiText(TextId::Off));
             break;
         case EditingManualBrightness:
-            if (settings().autoLight)
-            {
-                renderScrollingText(
-                    frame, 
-                    fullRefresh, 
-                    uiText(TextId::BrightnessDarkColon), 
-                    std::to_string(settings().brightnessDark) + "%");
-            } else
-            {
-                renderScrollingText(
-                    frame, 
-                    fullRefresh, 
-                    uiText(TextId::BrightnessColon), 
-                    std::to_string(settings().manualBrightness) + "%");
-            }
+            renderScrollingText(
+                frame, 
+                fullRefresh, 
+                uiText(TextId::BrightnessColon), 
+                std::to_string(settings().manualBrightness) + "%");
+            break;
+        case EditingBrightnessDark:
+            renderScrollingText(
+                frame, 
+                fullRefresh, 
+                uiText(TextId::BrightnessDarkColon), 
+                std::to_string(settings().brightnessDark) + "%");
             break;
         case EditingBrightnessDim:
             renderScrollingText(
@@ -96,21 +93,25 @@ void Options::renderFrame(Bitmap &frame, int editedValueIndex, int blinkingCount
     }
 }
 
-int Options::valueCount() const 
-{
-    if (settings().autoLight)
-        return ValueCount;
-    else
-        return EditingManualBrightness + 1; // No more editable value after this one
-}
-
 bool Options::isValueAvailable(int valueIndex) const 
 {
-    // The chime volume can only be set if the sound effects mode is selected.
-    return 
-        valueIndex != EditingChimeVolume || 
-        settings().hourlyChimeMode == Settings::HourlyChimeMode::Sound ||
-        settings().hourlyChimeMode == Settings::HourlyChimeMode::SoundOnDayLight;
+    switch (valueIndex)
+    {
+        case EditingChimeVolume:
+            // The chime volume can only be set if the sound effect mode is selected.
+            return settings().hourlyChimeMode == Settings::HourlyChimeMode::Sound ||
+                   settings().hourlyChimeMode == Settings::HourlyChimeMode::SoundOnDayLight;
+        case EditingManualBrightness:
+            // Manual brightness can only be set if auto light is disabled.
+            return !settings().autoLight;
+        case EditingBrightnessDark:
+        case EditingBrightnessDim:
+        case EditingBrightnessBright:
+            // Brightness values for auto light can only be set if it is enabled.
+            return settings().autoLight;
+        default:
+            return true;
+    }
 }
 
 void Options::modifyValue(int valueIndex, Direction direction)
@@ -152,7 +153,6 @@ void Options::modifyValue(int valueIndex, Direction direction)
                         player().playTrackInFolder(1, 1); 
                 });
 
-            // TODO: check if it makes sense to put the player in sleep mode after editing volume
             break;
 
         case EditingAutoLight:
@@ -161,13 +161,12 @@ void Options::modifyValue(int valueIndex, Direction direction)
             break;
 
         case EditingManualBrightness:
-            if (settings().autoLight)
-                adjustField(direction, AutoBrightnessPoint, modifySettings().brightnessDark);
-            else
-            {
-                adjustField(direction, ManualBrightness, modifySettings().manualBrightness);
-                considerManualBrightness();
-            }
+            adjustField(direction, ManualBrightness, modifySettings().manualBrightness);
+            considerManualBrightness();
+            break;
+
+        case EditingBrightnessDark:
+            adjustField(direction, AutoBrightnessPoint, modifySettings().brightnessDark);
             break;
 
         case EditingBrightnessDim:
