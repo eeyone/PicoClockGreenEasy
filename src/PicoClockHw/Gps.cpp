@@ -152,8 +152,10 @@ void Gps::onNmeaMessage(const std::string &msg)
     std::string status;
     if (!std::getline(stream, status, ','))
         return;
-    // Ignore the status. As long as it contains a time and date, that will be sufficient for
-    // synchronization. We don't need a real GPS lock.
+
+#ifndef GPS_SYNC_WITHOUT_FIX
+    if (status != "A") return; // Stop if data not valid, indicating that there is no GPS fix.
+#endif
 
     // Skip fields we don't need
     for (int i = 0; i < 6; i++)

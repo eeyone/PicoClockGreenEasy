@@ -23,4 +23,9 @@ add_compile_definitions(
     # This can be defined to simulate the three buttons using the standard input. Enter triggers SET
     # and the arrow keys trigger UP and DOWN.
     # SIMULATE_BUTTONS_FROM_STDIO
+
+    # This can be defined to use GPS date/time even if there is no GPS fix yet. This is less
+    # accurate (a few seconds difference) but can help in case of difficulty synchronizing from GPS
+    # indoors.
+    # GPS_SYNC_WITHOUT_FIX
 )
