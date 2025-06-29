@@ -23,6 +23,9 @@ void Temperature::renderFrame(Bitmap &frame, int editedValueIndex, int blinkingC
     TRACE << "Get temperature";
     float temp = clock().rtc()->temperature();
 
+    // RTC Temperature calibration 
+    temp = round(temp * 10)/10 + RTC_TEMP_CALIB;
+
     if (std::isnan(temp))
         return;
 
