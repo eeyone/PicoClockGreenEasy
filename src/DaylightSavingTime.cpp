@@ -67,9 +67,11 @@ void DaylightSavingTime::determineDstStartAndEnd(const tm &givenTm)
     tm dstEndTm = givenTm;
     if (DST_LOCATION == Europe)
     {
+        int offset_minutes = static_cast<int>(UTC_OFFSET * 60);
+
         // In Europe, DST starts on last Sunday in March at 01:00 UTC
         dstStartTm.tm_sec = 0;
-        dstStartTm.tm_min = UTC_OFFSET * 60 % 60;
+        dstStartTm.tm_min = (offset_minutes % 60 + 60) % 60;
         dstStartTm.tm_hour = 1 + UTC_OFFSET;
         dstStartTm.tm_mon = 2; // March as "months since January"
         dstStartTm.tm_mday = 31; // Last day of March
@@ -78,7 +80,7 @@ void DaylightSavingTime::determineDstStartAndEnd(const tm &givenTm)
 
         // In Europe, DST ends on last Sunday in October at 01:00 UTC
         dstEndTm.tm_sec = 0;
-        dstEndTm.tm_min = UTC_OFFSET * 60 % 60;
+        dstEndTm.tm_min = (offset_minutes % 60 + 60) % 60;
         dstEndTm.tm_hour = 1 + UTC_OFFSET;
         dstEndTm.tm_mon = 9; // October as "months since January"
         dstEndTm.tm_mday = 31; // Last day of October
