@@ -223,7 +223,7 @@ void ClockUi::onSecond()
         m_currentMenu == &m_rootMenu &&
         m_secondsWithoutUserInput >= AUTO_SCROLL_DELAY_SEC)
     {
-        switch(m_clock.get().tm_sec)
+        switch(m_clock.get().tm_sec % DISPLAY_CYCLE)
         {
             case 0:
                 m_curFuncIdx = m_lastUsedTimeFunction;

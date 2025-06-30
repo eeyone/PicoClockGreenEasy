@@ -18,6 +18,18 @@ project(PicoClockGreenEasy)
 # initialize the Raspberry Pi Pico SDK
 pico_sdk_init()
 
+if (DEFINED DISPLAY_DURATION)
+        target_compile_definitions(${PROJECT_NAME} PRIVATE DISPLAY_DURATION=${DISPLAY_DURATION})
+endif()
+
+if (DEFINED RTC_TEMP_CALIB)
+        target_compile_definitions(${PROJECT_NAME} PRIVATE RTC_TEMP_CALIB=${RTC_TEMP_CALIB})
+endif()
+
+if (DEFINED DISPLAY_CYCLE)
+        target_compile_definitions(${PROJECT_NAME} PRIVATE DISPLAY_CYCLE=${DISPLAY_CYCLE})
+endif()
+
 add_executable( ${PROJECT_NAME}
                 src/Bitmap.cpp
                 src/Clock.cpp
