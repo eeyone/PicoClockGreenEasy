@@ -25,6 +25,19 @@
 #include <iostream>
 #include <iomanip>
 
+// Provide default values for auto-scroll timing if not defined by the build system (CMake).
+// This makes the code compilable out-of-the-box, while still allowing customization.
+#ifndef DISPLAY_DURATION
+    DISPLAY_DURATION = static_cast<int>(DISPLAY_DURATION)
+#define DISPLAY_DURATION 20
+#endif
+
+#ifndef DISPLAY_CYCLE
+    DISPLAY_CYCLE = static_cast<int>(DISPLAY_CYCLE)
+// Total duration of one auto-scroll cycle (time -> date -> temperature -> time).
+#define DISPLAY_CYCLE (DISPLAY_DURATION * 3)
+#endif
+
 namespace
 {
     const int BUTTON_REPEAT_DELAY = 500;
@@ -32,7 +45,8 @@ namespace
     const int BRIGHTNESS_BOOST_AFTER_USER_INPUT_FOR_SEC = 5;
     const float BRIGHTNESS_BOOST_PERCENT = 20;
     const int STOP_RINGING_AFTER_SEC = 60 * 5; // Stop ringing after 5 minutes
-    const int AUTO_SCROLL_DELAY_SEC = 20;
+    // The auto scroll delay should be equal to the duration of one display item.
+    const int AUTO_SCROLL_DELAY_SEC = DISPLAY_DURATION;
 }
 
 // Make m_clock tick at the display frame rate, so that calculations are simpler.
@@ -230,12 +244,12 @@ void ClockUi::onSecond()
                 startVertScrolling(-1);
                 break;
 
-            case AUTO_SCROLL_DELAY_SEC:
+            case (DISPLAY_DURATION):
                 m_curFuncIdx = m_dateFuncIdx;
                 startVertScrolling(-1);
                 break;
 
-            case AUTO_SCROLL_DELAY_SEC * 2:
+            case (DISPLAY_DURATION * 2):
                 // Show the temperature if the RTC is available, otherwise go back to time.
                 if (m_clock.rtc() != nullptr)
                     m_curFuncIdx = m_temperatureFuncIdx;
