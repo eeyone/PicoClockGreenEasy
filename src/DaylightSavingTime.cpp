@@ -67,7 +67,7 @@ void DaylightSavingTime::determineDstStartAndEnd(const tm &givenTm)
     tm dstEndTm = givenTm;
     if (DST_LOCATION == Europe)
     {
-        int offset_minutes = static_cast<int>(UTC_OFFSET * 60);
+        int offsetMinutes = static_cast<int>(UTC_OFFSET * 60);
 
         // In Europe, DST starts on last Sunday in March at 01:00 UTC
         dstStartTm.tm_sec = 0;
