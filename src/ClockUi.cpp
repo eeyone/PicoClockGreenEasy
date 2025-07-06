@@ -31,7 +31,8 @@ namespace
     const int DIM_AMBIENT_LIGHT = 10; // As percentage
     const int BRIGHTNESS_BOOST_AFTER_USER_INPUT_FOR_SEC = 5;
     const float BRIGHTNESS_BOOST_PERCENT = 20;
-    const int STOP_RINGING_AFTER_SEC = 60 * 5; // Stop ringing after 5 minutes
+    const int STOP_ALARM_AFTER_SEC = 60 * 5; // Stop ringing after 5 minutes
+    const int MUSIC_ALARM_BEEPS_AFTER_SEC = 60 * 4; // Also beep after 4 minutes of music alarm
     const int AUTO_SCROLL_DELAY_SEC = 20;
 }
 
@@ -185,21 +186,27 @@ void ClockUi::onSecond()
         
         switch (m_alarmRinging)
         {
-            case Settings::AlarmMode::Gradual:
-                m_buzzer.beepForMs(m_ringingForSecs);
-                break;
-            case Settings::AlarmMode::Loud:
-                m_buzzer.beepForMs(500);
-                break;
+        case Settings::AlarmMode::Gradual:
+            m_buzzer.beepForMs(m_ringingForSecs);
+            break;
+        case Settings::AlarmMode::Loud:
+            m_buzzer.beepForMs(500);
+            break;
+        case Settings::AlarmMode::Music:
+            // In the last minute of playing music, also emit some beeps (like the gradual mode) in 
+            // case the player module does not emit any sound (this happened already). This will 
+            // prevent the user from missing the alarm.
+            if (m_ringingForSecs > MUSIC_ALARM_BEEPS_AFTER_SEC)
+                m_buzzer.beepForMs(m_ringingForSecs - MUSIC_ALARM_BEEPS_AFTER_SEC);
         }
 
-        if (m_ringingForSecs > STOP_RINGING_AFTER_SEC)
+        if (m_ringingForSecs > STOP_ALARM_AFTER_SEC)
         {
             if (m_alarmRinging == Settings::AlarmMode::Music)
                 m_player.stop();
 
             m_alarmRinging = Settings::AlarmMode::Off;
-        }
+        } 
     }
     else if (hourlyChimeActive() && m_clock.get().tm_min == 0 && m_clock.get().tm_sec == 0)
     {
