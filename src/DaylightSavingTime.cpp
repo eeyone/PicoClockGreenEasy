@@ -80,7 +80,7 @@ void DaylightSavingTime::determineDstStartAndEnd(const tm &givenTm)
 
         // In Europe, DST ends on last Sunday in October at 01:00 UTC
         dstEndTm.tm_sec = 0;
-        dstEndTm.tm_min = (ooffsetMinutes % 60) % 60;
+        dstEndTm.tm_min = (offsetMinutes % 60) % 60;
         dstEndTm.tm_hour = 1 + UTC_OFFSET;
         dstEndTm.tm_mon = 9; // October as "months since January"
         dstEndTm.tm_mday = 31; // Last day of October
