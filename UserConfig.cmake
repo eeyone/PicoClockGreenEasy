@@ -28,4 +28,9 @@ add_compile_definitions(
     # accurate (a few seconds difference) but can help in case of difficulty synchronizing from GPS
     # indoors.
     # GPS_SYNC_WITHOUT_FIX
+
+    # This can be set to compensate the temperature measurement of the RTC. The value is the 
+    # correction applied to the temperature in degrees celsius. For example, set -2.0 for lowering 
+    # 2.0 degrees celsius on the display.
+    RTC_TEMP_CALIB=0.0
 )

@@ -16,7 +16,8 @@ void Temperature::activate()
     forceRefresh();
 }
 
-void Temperature::renderFrame(Bitmap &frame, int editedValueIndex, int blinkingCounter, bool fullRefresh)
+void Temperature::renderFrame(
+    Bitmap &frame, int editedValueIndex, int blinkingCounter, bool fullRefresh)
 {
     if ((!fullRefresh && clock().tickCount() != 0) || clock().rtc() == nullptr) return;
 
@@ -25,6 +26,11 @@ void Temperature::renderFrame(Bitmap &frame, int editedValueIndex, int blinkingC
 
     if (std::isnan(temp))
         return;
+
+#ifdef RTC_TEMP_CALIB
+        // RTC Temperature calibration 
+    temp += RTC_TEMP_CALIB;
+#endif
 
     if (!settings().useCelsius)
         temp = temp * 9 / 5 + 32;
