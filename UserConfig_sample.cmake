@@ -36,11 +36,11 @@ add_compile_definitions(
 
     # Display auto rotation cycle in seconds.
     # Set the cycle duration to from 5 to 60 seconds to adjust the auto rotation cycle.
-    set(DISPLAY_CYCLE 60)
+    DISPLAY_CYCLE=60
 
     # This can be defined to set the display duration of time and date.
     # Set Druation to from 0.1 to 10.0 seconds to adjust display duration of time and date.
     # 5 will display time and date for 5 seconds, 1 will display for 1 seconds.
     # DISPLAY_DURATION <= DISPLAY_CYCLE / 2
-    set(DISPLAY_DURATION 20)
+    DISPLAY_DURATION=20
 )
