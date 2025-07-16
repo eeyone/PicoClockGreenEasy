@@ -27,15 +27,14 @@ Clock &AbstractFunction::clock()
 
 void AbstractFunction::convertHour(int hour24, int &displayedHour, bool &morning) const
 {
+    // 'morning' is initialized to prevent using an uninitialized value.
+    morning = hour24 < 12;
+    
     if (settings().format24h) {
         displayedHour = hour24;
-        // Although the AM/PM indicator is not displayed in 24h mode,
-        // 'morning' is initialized to prevent using an uninitialized value.
-        morning = hour24 < 12;
     }
     else
     {
-        morning = hour24 < 12;
         displayedHour =  morning ? hour24 : hour24 - 12;
         
         if (displayedHour == 0)
