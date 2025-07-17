@@ -149,7 +149,7 @@ private:
 
     SyncInfo m_syncInfo;
 
-    DaylightSavingTime m_dst;
+    DaylightSavingTime m_dst {UTC_OFFSET};
     time_t m_time = 0; // Current time as unix time, local (not UTC), not considering DST
     tm m_tm = {}; // Current time as tm, considering DST
 

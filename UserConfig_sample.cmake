@@ -29,9 +29,9 @@ add_compile_definitions(
     # indoors.
     # GPS_SYNC_WITHOUT_FIX
 
-    # This can be defined to use the RTC temperature calibration.
-    # The value is the temperature in degrees celsius at which the RTC is compensated.
-    # For example, set -2.0 for lowering 2.0 degrees celsius on the display.
+    # This can be set to compensate the temperature measurement of the RTC. The value is the 
+    # correction applied to the temperature in degrees celsius. For example, set -2.0 for lowering 
+    # 2.0 degrees celsius on the display.
     RTC_TEMP_CALIB=0.0
 
     # Display auto rotation cycle in seconds.
