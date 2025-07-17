@@ -1,5 +1,4 @@
 #include "DaylightSavingTime.h"
-#include "Clock.h"
 #include "Utils/Trace.h"
 
 time_t DaylightSavingTime::considerDst(time_t time)
@@ -45,6 +44,10 @@ bool DaylightSavingTime::isDstActive(time_t time)
         time >= m_yearStart + 366 * 24 * 3600) // Definitely in the next year, even if it was a leap year
     {
         tm givenTm = *localtime(&time);
+		
+        // Disable DST consideration of mktime (for unit tests, it makes no difference with the 
+        // Pico SDK)
+        givenTm.tm_isdst = 0; 
 
         tm yearStartTm = givenTm;
         yearStartTm.tm_sec =0 ;
@@ -67,12 +70,13 @@ void DaylightSavingTime::determineDstStartAndEnd(const tm &givenTm)
     tm dstEndTm = givenTm;
     if (DST_LOCATION == Europe)
     {
-        int offsetMinutes = static_cast<int>(UTC_OFFSET * 60);
+
+        int utcOffsetMinutes = static_cast<int>(m_utcOffset * 60);
 
         // In Europe, DST starts on last Sunday in March at 01:00 UTC
         dstStartTm.tm_sec = 0;
-        dstStartTm.tm_min = (offsetMinutes % 60 + 60) % 60;
-        dstStartTm.tm_hour = 1 + UTC_OFFSET;
+        dstStartTm.tm_min = utcOffsetMinutes % 60;
+        dstStartTm.tm_hour = 1 + static_cast<int>(m_utcOffset);
         dstStartTm.tm_mon = 2; // March as "months since January"
         dstStartTm.tm_mday = 31; // Last day of March
         mktime(&dstStartTm); // So that dstStartTm.tm_wday is calculated
@@ -80,8 +84,8 @@ void DaylightSavingTime::determineDstStartAndEnd(const tm &givenTm)
 
         // In Europe, DST ends on last Sunday in October at 01:00 UTC
         dstEndTm.tm_sec = 0;
-        dstEndTm.tm_min = (offsetMinutes % 60) % 60;
-        dstEndTm.tm_hour = 1 + UTC_OFFSET;
+        dstEndTm.tm_min = utcOffsetMinutes % 60;
+        dstEndTm.tm_hour = 1 + static_cast<int>(m_utcOffset);
         dstEndTm.tm_mon = 9; // October as "months since January"
         dstEndTm.tm_mday = 31; // Last day of October
         mktime(&dstEndTm); // So that dstEndTm.tm_wday is calculated
@@ -113,8 +117,8 @@ void DaylightSavingTime::determineDstStartAndEnd(const tm &givenTm)
             dstEndTm.tm_mday = 8 - dstEndTm.tm_wday; // first Sunday    
     }
 
-    m_dstStart = mktime(&dstStartTm);
+	m_dstStart = mktime(&dstStartTm);
     TRACE << "This year, DST starts on" << dstStartTm;
-    m_dstEnd = mktime(&dstEndTm);
+	m_dstEnd = mktime(&dstEndTm);
     TRACE << "This year, DST ends on" << dstEndTm;
 }
