@@ -214,7 +214,7 @@ void ClockUi::onSecond()
                 m_buzzer.beepForMs(m_ringingForSecs - MUSIC_ALARM_BEEPS_AFTER_SEC);
         }
 
-        if (m_ringingForSecs > STOP_ALARM_AFTER_SEC)
+        if (m_ringingForSecs > STOP_RINGING_AFTER_SEC)
         {
             if (m_alarmRinging == Settings::AlarmMode::Music)
                 m_player.stop();
