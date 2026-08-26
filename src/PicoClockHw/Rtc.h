@@ -3,6 +3,7 @@
 #include "Utils/MovingAverage.h"
 
 #include <memory>
+#include <cstdint>
 
 class Rtc
 {
